@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitoreo de Entregas</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; color: #1a1a18; min-height: 100vh; }
+  header { background: #fff; border-bottom: 0.5px solid #e0dfd8; padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; position: sticky; top: 0; z-index: 10; }
+  header h1 { font-size: 18px; font-weight: 500; }
+  #ultima-act { font-size: 13px; color: #888; }
+  .controles { background: #fff; border-bottom: 0.5px solid #e0dfd8; padding: 0.75rem 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
+  .controles input[type="text"], .controles select { height: 36px; border: 0.5px solid #d0cfc8; border-radius: 8px; padding: 0 12px; font-size: 14px; background: #fff; color: #1a1a18; outline: none; }
+  .controles input[type="text"]:focus, .controles select:focus { border-color: #888; }
+  .controles input[type="text"] { min-width: 200px; flex: 1; }
+  .controles input[type="date"] { height: 36px; border: 0.5px solid #d0cfc8; border-radius: 8px; padding: 0 10px; font-size: 14px; background: #fff; color: #1a1a18; outline: none; cursor: pointer; }
+  .controles input[type="date"]:focus { border-color: #888; }
+  .lbl-fecha { font-size: 13px; color: #666; white-space: nowrap; }
+  button { height: 36px; padding: 0 16px; border: 0.5px solid #d0cfc8; border-radius: 8px; background: #fff; font-size: 14px; cursor: pointer; color: #1a1a18; transition: background 0.15s; white-space: nowrap; }
+  button:hover { background: #f0efe8; }
+  button:active { transform: scale(0.98); }
+  .btn-hoy { background: #e1f5ee; border-color: #9fe1cb; color: #0f6e56; font-weight: 500; }
+  .btn-hoy:hover { background: #c5ede0; }
+  .resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; padding: 1.25rem 1.5rem; }
+  .stat-card { background: #f0efe8; border-radius: 8px; padding: 0.9rem 1rem; }
+  .stat-card .num { font-size: 24px; font-weight: 500; }
+  .stat-card .lbl { font-size: 12px; color: #888; margin-top: 2px; }
+  .stat-exitoso .num { color: #0f6e56; }
+  .stat-rechazado .num { color: #993c1d; }
+  .stat-reprog .num { color: #ba7517; }
+  .stat-parcial .num { color: #3b6d11; }
+  .stat-noent .num { color: #a32d2d; }
+  .contenedor { padding: 0 1.5rem 2rem; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; border: 0.5px solid #e0dfd8; font-size: 14px; }
+  thead { background: #f8f7f2; }
+  th { padding: 10px 12px; text-align: left; font-weight: 500; font-size: 13px; color: #666; border-bottom: 0.5px solid #e0dfd8; white-space: nowrap; }
+  td { padding: 9px 12px; border-bottom: 0.5px solid #f0efe8; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafaf7; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .b-exitoso   { background: #e1f5ee; color: #0f6e56; }
+  .b-entregado { background: #e1f5ee; color: #0f6e56; }
+  .b-rechazado { background: #faece7; color: #993c1d; }
+  .b-reprogramado { background: #faeeda; color: #ba7517; }
+  .b-parcial   { background: #eaf3de; color: #3b6d11; }
+  .b-noentregado { background: #fcebeb; color: #a32d2d; }
+  .b-default   { background: #f0efe8; color: #5f5e5a; }
+  #cargando { text-align: center; padding: 3rem; color: #888; font-size: 15px; }
+  #sin-datos { text-align: center; padding: 2rem; color: #888; }
+  @media (max-width: 600px) {
+    header { padding: 0.75rem 1rem; }
+    .controles { padding: 0.75rem 1rem; }
+    .resumen { padding: 1rem; }
+    .contenedor { padding: 0 0.75rem 2rem; }
+    th, td { padding: 8px; font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>📦 Monitoreo de Entregas</h1>
+  <span id="ultima-act">Cargando...</span>
+</header>
+<div class="controles">
+  <input type="text" id="buscar" placeholder="Buscar por pedido, municipio..." oninput="filtrar()">
+  <select id="filtro-estatus" onchange="filtrar()">
+    <option value="">Todos los estatus</option>
+    <option value="exitoso">Exitoso</option>
+    <option value="entregado">Entregado</option>
+    <option value="rechazado">Rechazado</option>
+    <option value="reprogramado">Reprogramado</option>
+    <option value="parcial">Parcial</option>
+    <option value="no entregado">No entregado</option>
+  </select>
+  <span class="lbl-fecha">Fecha:</span>
+  <input type="date" id="filtro-fecha" onchange="filtrar()">
+  <button class="btn-hoy" onclick="ponerHoy()">Hoy</button>
+  <button onclick="limpiarFecha()">Ver todo</button>
+  <button onclick="cargarDatos()">↻ Actualizar</button>
+</div>
+<div class="resumen">
+  <div class="stat-card"><div class="num" id="s-total">—</div><div class="lbl">Total</div></div>
+  <div class="stat-card stat-exitoso"><div class="num" id="s-exitoso">—</div><div class="lbl">Exitoso / Entregado</div></div>
+  <div class="stat-card stat-rechazado"><div class="num" id="s-rechazado">—</div><div class="lbl">Rechazado</div></div>
+  <div class="stat-card stat-reprog"><div class="num" id="s-reprog">—</div><div class="lbl">Reprogramado</div></div>
+  <div class="stat-card stat-noent"><div class="num" id="s-noent">—</div><div class="lbl">No entregado</div></div>
+  <div class="stat-card stat-parcial"><div class="num" id="s-parcial">—</div><div class="lbl">Parcial</div></div>
+</div>
+<div class="contenedor">
+  <div id="cargando">Conectando con el archivo...</div>
+  <table id="tabla" style="display:none;">
+    <thead>
+      <tr>
+        <th>Pedido</th>
+        <th>Fecha</th>
+        <th>Municipio</th>
+        <th>Hora</th>
+        <th>Estatus</th>
+        <th>Sub estatus</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <div id="sin-datos" style="display:none;">No se encontraron resultados para esta fecha.</div>
+</div>
+<script>
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw280EIgpDEOAiP-zaYvcKZgxhQBoIzhV1Kyy3LAE6WquErvzig4d772qKSt083WbR3/exec';
+
+  let todosLosDatos = [];
+
+  // Convierte cualquier formato de fecha a YYYY-MM-DD
+  function normalizarFecha(f) {
+    if (!f || String(f).trim() === '') return '';
+    const s = String(f).trim();
+
+    // Formato objeto Date serializado: "Sat Apr 05 2025 01:00:00 GMT-0600"
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) {
+      const y  = d.getFullYear();
+      const mo = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${y}-${mo}-${dd}`;
+    }
+
+    const sl = s.toLowerCase();
+
+    // Formato "5/4/2025"
+    const m1 = sl.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+    if (m1) {
+      let [_, dia, mo, y] = m1;
+      if (y.length === 2) y = '20' + y;
+      return `${y}-${mo.padStart(2,'0')}-${dia.padStart(2,'0')}`;
+    }
+
+    // Formato "3-junio"
+    const MESES = {enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,julio:7,agosto:8,septiembre:9,octubre:10,noviembre:11,diciembre:12};
+    const anio = new Date().getFullYear();
+    const m2 = sl.match(/^(\d{1,2})[-\s]([a-z]+)$/);
+    if (m2) {
+      const mo = MESES[m2[2]];
+      if (mo) return `${anio}-${String(mo).padStart(2,'0')}-${m2[1].padStart(2,'0')}`;
+    }
+
+    return '';
+  }
+
+  function fechaHoy() {
+    const hoy = new Date();
+    return `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+  }
+
+  function ponerHoy() {
+    document.getElementById('filtro-fecha').value = fechaHoy();
+    filtrar();
+  }
+
+  function limpiarFecha() {
+    document.getElementById('filtro-fecha').value = '';
+    filtrar();
+  }
+
+  function badgeClass(est) {
+    const e = (est || '').toLowerCase().trim();
+    if (e.includes('exitoso') || e === 'entregado') return 'b-exitoso';
+    if (e.includes('rechazado')) return 'b-rechazado';
+    if (e.includes('reprogramado')) return 'b-reprogramado';
+    if (e.includes('parcial')) return 'b-parcial';
+    if (e.includes('no entregado')) return 'b-noentregado';
+    return 'b-default';
+  }
+
+  function actualizarResumen(datos) {
+    const exitosos   = datos.filter(r => { const e=(r.estatus||'').toLowerCase(); return e.includes('exitoso')||e==='entregado'; }).length;
+    const rechazados = datos.filter(r => (r.estatus||'').toLowerCase().includes('rechazado')).length;
+    const reprog     = datos.filter(r => (r.estatus||'').toLowerCase().includes('reprogramado')).length;
+    const parcial    = datos.filter(r => (r.estatus||'').toLowerCase().includes('parcial')).length;
+    const noent      = datos.filter(r => (r.estatus||'').toLowerCase().includes('no entregado')).length;
+    document.getElementById('s-total').textContent     = datos.length;
+    document.getElementById('s-exitoso').textContent   = exitosos;
+    document.getElementById('s-rechazado').textContent = rechazados;
+    document.getElementById('s-reprog').textContent    = reprog;
+    document.getElementById('s-parcial').textContent   = parcial;
+    document.getElementById('s-noent').textContent     = noent;
+  }
+
+  function filtrar() {
+    const texto   = document.getElementById('buscar').value.toLowerCase();
+    const estatus = document.getElementById('filtro-estatus').value.toLowerCase();
+    const fecha   = document.getElementById('filtro-fecha').value;
+
+    const filtrados = todosLosDatos.filter(r => {
+      const matchTexto = !texto  || [r.pedido, r.muni, r.subest].some(v => (v||'').toLowerCase().includes(texto));
+      const matchEst   = !estatus || (r.estatus||'').toLowerCase().includes(estatus);
+      const matchFecha = !fecha   || normalizarFecha(r.fecha) === fecha;
+      return matchTexto && matchEst && matchFecha;
+    });
+
+    renderTabla(filtrados);
+    actualizarResumen(filtrados);
+  }
+
+  function formatearFechaLegible(f) {
+    if (!f) return '—';
+    const d = new Date(f);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+    return f;
+  }
+
+  function renderTabla(datos) {
+    const tbody    = document.getElementById('tbody');
+    const tabla    = document.getElementById('tabla');
+    const sinDatos = document.getElementById('sin-datos');
+    if (!datos.length) { tabla.style.display='none'; sinDatos.style.display='block'; return; }
+    sinDatos.style.display = 'none';
+    tabla.style.display = 'table';
+    tbody.innerHTML = datos.map(r => `
+      <tr>
+        <td><strong>${r.pedido||'—'}</strong></td>
+        <td style="color:#888;font-size:13px;">${formatearFechaLegible(r.fecha)}</td>
+        <td>${r.muni||'—'}</td>
+        <td>${r.hora||'—'}</td>
+        <td><span class="badge ${badgeClass(r.estatus)}">${r.estatus||'—'}</span></td>
+        <td style="color:#666;font-size:13px;">${r.subest||'—'}</td>
+      </tr>
+    `).join('');
+  }
+
+  async function cargarDatos() {
+    document.getElementById('cargando').style.display = 'block';
+    document.getElementById('tabla').style.display = 'none';
+    document.getElementById('sin-datos').style.display = 'none';
+    document.getElementById('ultima-act').textContent = 'Actualizando...';
+    try {
+      const resp = await fetch(APPS_SCRIPT_URL);
+      if (!resp.ok) throw new Error('Error al conectar');
+      const datos = await resp.json();
+      todosLosDatos = datos.filter(r => r.pedido && r.pedido.trim() !== '');
+      filtrar();
+      const ahora = new Date();
+      document.getElementById('ultima-act').textContent =
+        'Actualizado: ' + ahora.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+    } catch (err) {
+      document.getElementById('cargando').textContent = '⚠️ No se pudo conectar.';
+      document.getElementById('ultima-act').textContent = 'Error de conexión';
+      console.error(err);
+    } finally {
+      document.getElementById('cargando').style.display = todosLosDatos.length ? 'none' : 'block';
+    }
+  }
+
+  window.addEventListener('load', () => {
+    document.getElementById('filtro-fecha').value = fechaHoy();
+    cargarDatos();
+  });
+
+  setInterval(cargarDatos, 5 * 60 * 1000);
+</script>
+</body>
+</html>
