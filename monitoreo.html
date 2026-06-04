@@ -13,7 +13,7 @@
   .controles { background: #fff; border-bottom: 0.5px solid #e0dfd8; padding: 0.75rem 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
   .controles input[type="text"], .controles select { height: 36px; border: 0.5px solid #d0cfc8; border-radius: 8px; padding: 0 12px; font-size: 14px; background: #fff; color: #1a1a18; outline: none; }
   .controles input[type="text"]:focus, .controles select:focus { border-color: #888; }
-  .controles input[type="text"] { min-width: 200px; flex: 1; }
+  .controles input[type="text"] { min-width: 160px; flex: 1; }
   .controles input[type="date"] { height: 36px; border: 0.5px solid #d0cfc8; border-radius: 8px; padding: 0 10px; font-size: 14px; background: #fff; color: #1a1a18; outline: none; cursor: pointer; }
   .controles input[type="date"]:focus { border-color: #888; }
   .lbl-fecha { font-size: 13px; color: #666; white-space: nowrap; }
@@ -46,6 +46,7 @@
   .b-parcial   { background: #eaf3de; color: #3b6d11; }
   .b-noentregado { background: #fcebeb; color: #a32d2d; }
   .b-default   { background: #f0efe8; color: #5f5e5a; }
+  .badge-tienda { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; background: #e8e8f0; color: #444; white-space: nowrap; }
   #cargando { text-align: center; padding: 3rem; color: #888; font-size: 15px; }
   #sin-datos { text-align: center; padding: 2rem; color: #888; }
   @media (max-width: 600px) {
@@ -63,7 +64,24 @@
   <span id="ultima-act">Cargando...</span>
 </header>
 <div class="controles">
-  <input type="text" id="buscar" placeholder="Buscar por pedido, municipio..." oninput="filtrar()">
+  <input type="text" id="buscar" placeholder="Buscar pedido, municipio..." oninput="filtrar()">
+  <select id="filtro-tienda" onchange="filtrar()">
+    <option value="">Todas las tiendas</option>
+    <option value="PUEBLA">PUEBLA</option>
+    <option value="POLANCO">POLANCO</option>
+    <option value="MIRAMONTES">MIRAMONTES</option>
+    <option value="ZARAGOZA">ZARAGOZA</option>
+    <option value="SANTA FE">SANTA FE</option>
+    <option value="GUSTAVO BAZ">GUSTAVO BAZ</option>
+    <option value="QUERÉTARO">QUERÉTARO</option>
+    <option value="INTERLOMAS">INTERLOMAS</option>
+    <option value="TOREO">TOREO</option>
+    <option value="LA VIGA">LA VIGA</option>
+    <option value="PERINORTE">PERINORTE</option>
+    <option value="STUDIO">STUDIO</option>
+    <option value="METEPEC">METEPEC</option>
+    <option value="VENDEDORES">VENDEDORES (EM/FOR/EQ)</option>
+  </select>
   <select id="filtro-estatus" onchange="filtrar()">
     <option value="">Todos los estatus</option>
     <option value="exitoso">Exitoso</option>
@@ -93,6 +111,7 @@
     <thead>
       <tr>
         <th>Pedido</th>
+        <th>Tienda</th>
         <th>Fecha</th>
         <th>Municipio</th>
         <th>Hora</th>
@@ -102,38 +121,56 @@
     </thead>
     <tbody id="tbody"></tbody>
   </table>
-  <div id="sin-datos" style="display:none;">No se encontraron resultados para esta fecha.</div>
+  <div id="sin-datos" style="display:none;">No se encontraron resultados.</div>
 </div>
 <script>
   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw280EIgpDEOAiP-zaYvcKZgxhQBoIzhV1Kyy3LAE6WquErvzig4d772qKSt083WbR3/exec';
 
   let todosLosDatos = [];
 
-  // Convierte cualquier formato de fecha a YYYY-MM-DD
+  // Mapa de prefijos a tienda
+  const TIENDAS = {
+    'PUE': 'PUEBLA', 'OPU': 'PUEBLA',
+    'POL': 'POLANCO', 'OPO': 'POLANCO',
+    'MIR': 'MIRAMONTES', 'OMI': 'MIRAMONTES',
+    'ZAR': 'ZARAGOZA', 'OZA': 'ZARAGOZA',
+    'SFE': 'SANTA FE', 'OSF': 'SANTA FE', 'DECO': 'SANTA FE',
+    'KGB': 'GUSTAVO BAZ', 'GOU': 'GUSTAVO BAZ',
+    'QRO': 'QUERÉTARO', 'OQR': 'QUERÉTARO',
+    'INT': 'INTERLOMAS', 'OIN': 'INTERLOMAS',
+    'TOR': 'TOREO', 'OTO': 'TOREO',
+    'LVI': 'LA VIGA', 'OLV': 'LA VIGA',
+    'KOU': 'PERINORTE', 'KPE': 'PERINORTE',
+    'STU': 'STUDIO', 'CD': 'STUDIO',
+    'MET': 'METEPEC', 'OME': 'METEPEC', 'ET': 'METEPEC',
+    'EM': 'VENDEDORES', 'FOR': 'VENDEDORES', 'EQ': 'VENDEDORES',
+  };
+
+  function detectarTienda(pedido) {
+    if (!pedido) return 'OTRA';
+    const p = pedido.toUpperCase().trim();
+    // Ordenar por longitud descendente para que prefijos largos tengan prioridad
+    const prefijos = Object.keys(TIENDAS).sort((a, b) => b.length - a.length);
+    for (const pref of prefijos) {
+      if (p.startsWith(pref)) return TIENDAS[pref];
+    }
+    return 'OTRA';
+  }
+
   function normalizarFecha(f) {
     if (!f || String(f).trim() === '') return '';
     const s = String(f).trim();
-
-    // Formato objeto Date serializado: "Sat Apr 05 2025 01:00:00 GMT-0600"
     const d = new Date(s);
     if (!isNaN(d.getTime())) {
-      const y  = d.getFullYear();
-      const mo = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      return `${y}-${mo}-${dd}`;
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     }
-
     const sl = s.toLowerCase();
-
-    // Formato "5/4/2025"
     const m1 = sl.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
     if (m1) {
       let [_, dia, mo, y] = m1;
       if (y.length === 2) y = '20' + y;
       return `${y}-${mo.padStart(2,'0')}-${dia.padStart(2,'0')}`;
     }
-
-    // Formato "3-junio"
     const MESES = {enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,julio:7,agosto:8,septiembre:9,octubre:10,noviembre:11,diciembre:12};
     const anio = new Date().getFullYear();
     const m2 = sl.match(/^(\d{1,2})[-\s]([a-z]+)$/);
@@ -141,7 +178,6 @@
       const mo = MESES[m2[2]];
       if (mo) return `${anio}-${String(mo).padStart(2,'0')}-${m2[1].padStart(2,'0')}`;
     }
-
     return '';
   }
 
@@ -185,15 +221,17 @@
   }
 
   function filtrar() {
-    const texto   = document.getElementById('buscar').value.toLowerCase();
-    const estatus = document.getElementById('filtro-estatus').value.toLowerCase();
-    const fecha   = document.getElementById('filtro-fecha').value;
+    const texto  = document.getElementById('buscar').value.toLowerCase();
+    const tienda = document.getElementById('filtro-tienda').value;
+    const estatus= document.getElementById('filtro-estatus').value.toLowerCase();
+    const fecha  = document.getElementById('filtro-fecha').value;
 
     const filtrados = todosLosDatos.filter(r => {
-      const matchTexto = !texto  || [r.pedido, r.muni, r.subest].some(v => (v||'').toLowerCase().includes(texto));
-      const matchEst   = !estatus || (r.estatus||'').toLowerCase().includes(estatus);
-      const matchFecha = !fecha   || normalizarFecha(r.fecha) === fecha;
-      return matchTexto && matchEst && matchFecha;
+      const matchTexto  = !texto  || [r.pedido, r.muni, r.subest].some(v => (v||'').toLowerCase().includes(texto));
+      const matchTienda = !tienda || r.tienda === tienda;
+      const matchEst    = !estatus|| (r.estatus||'').toLowerCase().includes(estatus);
+      const matchFecha  = !fecha  || normalizarFecha(r.fecha) === fecha;
+      return matchTexto && matchTienda && matchEst && matchFecha;
     });
 
     renderTabla(filtrados);
@@ -203,9 +241,7 @@
   function formatearFechaLegible(f) {
     if (!f) return '—';
     const d = new Date(f);
-    if (!isNaN(d.getTime())) {
-      return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
-    }
+    if (!isNaN(d.getTime())) return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
     return f;
   }
 
@@ -219,6 +255,7 @@
     tbody.innerHTML = datos.map(r => `
       <tr>
         <td><strong>${r.pedido||'—'}</strong></td>
+        <td><span class="badge-tienda">${r.tienda||'—'}</span></td>
         <td style="color:#888;font-size:13px;">${formatearFechaLegible(r.fecha)}</td>
         <td>${r.muni||'—'}</td>
         <td>${r.hora||'—'}</td>
@@ -237,7 +274,9 @@
       const resp = await fetch(APPS_SCRIPT_URL);
       if (!resp.ok) throw new Error('Error al conectar');
       const datos = await resp.json();
-      todosLosDatos = datos.filter(r => r.pedido && r.pedido.trim() !== '');
+      todosLosDatos = datos
+        .filter(r => r.pedido && r.pedido.trim() !== '')
+        .map(r => ({ ...r, tienda: detectarTienda(r.pedido) }));
       filtrar();
       const ahora = new Date();
       document.getElementById('ultima-act').textContent =
@@ -256,7 +295,7 @@
     cargarDatos();
   });
 
-  setInterval(cargarDatos, 60 * 1000);
+  setInterval(cargarDatos, 5 * 60 * 1000);
 </script>
 </body>
 </html>
