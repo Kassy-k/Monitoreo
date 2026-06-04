@@ -5,82 +5,139 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Monitoreo de Entregas</title>
 <style>
+  :root {
+    --bg: #f7f6f2;
+    --surface: #ffffff;
+    --surface2: #f1efe8;
+    --border: rgba(0,0,0,0.1);
+    --border2: rgba(0,0,0,0.07);
+    --text: #1a1a18;
+    --text2: #5f5e5a;
+    --text3: #888780;
+    --accent: #0f6e56;
+    --accent-bg: #e1f5ee;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  [data-theme="dark"] {
+    --bg: #141412;
+    --surface: #1e1e1b;
+    --surface2: #252522;
+    --border: rgba(255,255,255,0.1);
+    --border2: rgba(255,255,255,0.06);
+    --text: #f0ede6;
+    --text2: #b4b2a9;
+    --text3: #888780;
+    --accent: #5dcaa5;
+    --accent-bg: #04342c;
+    --shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; color: #1a1a18; min-height: 100vh; }
-  header { background: #fff; border-bottom: 0.5px solid #e0dfd8; padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; position: sticky; top: 0; z-index: 10; }
-  header h1 { font-size: 18px; font-weight: 500; }
-  #ultima-act { font-size: 13px; color: #888; }
-  .controles { background: #fff; border-bottom: 0.5px solid #e0dfd8; padding: 0.75rem 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
-  .controles input[type="text"], .controles select { height: 36px; border: 0.5px solid #d0cfc8; border-radius: 8px; padding: 0 12px; font-size: 14px; background: #fff; color: #1a1a18; outline: none; }
-  .controles input[type="text"]:focus, .controles select:focus { border-color: #888; }
-  .controles input[type="text"] { min-width: 160px; flex: 1; }
-  .controles input[type="date"] { height: 36px; border: 0.5px solid #d0cfc8; border-radius: 8px; padding: 0 10px; font-size: 14px; background: #fff; color: #1a1a18; outline: none; cursor: pointer; }
-  .controles input[type="date"]:focus { border-color: #888; }
-  .lbl-fecha { font-size: 13px; color: #666; white-space: nowrap; }
-  button { height: 36px; padding: 0 16px; border: 0.5px solid #d0cfc8; border-radius: 8px; background: #fff; font-size: 14px; cursor: pointer; color: #1a1a18; transition: background 0.15s; white-space: nowrap; }
-  button:hover { background: #f0efe8; }
-  button:active { transform: scale(0.98); }
-  .btn-hoy { background: #e1f5ee; border-color: #9fe1cb; color: #0f6e56; font-weight: 500; }
-  .btn-hoy:hover { background: #c5ede0; }
-  .resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; padding: 1.25rem 1.5rem; }
-  .stat-card { background: #f0efe8; border-radius: 8px; padding: 0.9rem 1rem; }
-  .stat-card .num { font-size: 24px; font-weight: 500; }
-  .stat-card .lbl { font-size: 12px; color: #888; margin-top: 2px; }
-  .stat-exitoso .num { color: #0f6e56; }
-  .stat-rechazado .num { color: #993c1d; }
-  .stat-reprog .num { color: #ba7517; }
-  .stat-parcial .num { color: #3b6d11; }
-  .stat-noent .num { color: #a32d2d; }
-  .contenedor { padding: 0 1.5rem 2rem; overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; border: 0.5px solid #e0dfd8; font-size: 14px; }
-  thead { background: #f8f7f2; }
-  th { padding: 10px 12px; text-align: left; font-weight: 500; font-size: 13px; color: #666; border-bottom: 0.5px solid #e0dfd8; white-space: nowrap; }
-  td { padding: 9px 12px; border-bottom: 0.5px solid #f0efe8; vertical-align: middle; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.2s, color 0.2s; }
+
+  header { background: var(--surface); border-bottom: 0.5px solid var(--border); padding: 0.9rem 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow); }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .logo-icon { width: 32px; height: 32px; background: var(--accent-bg); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  header h1 { font-size: 16px; font-weight: 500; letter-spacing: -0.01em; }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  #ultima-act { font-size: 12px; color: var(--text3); }
+  .btn-theme { width: 34px; height: 34px; border: 0.5px solid var(--border); border-radius: 8px; background: var(--surface2); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--text2); transition: background 0.15s; }
+  .btn-theme:hover { background: var(--border); }
+
+  .controles { background: var(--surface); border-bottom: 0.5px solid var(--border2); padding: 0.65rem 1.5rem; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .ctrl-group { display: flex; align-items: center; gap: 6px; }
+  .ctrl-label { font-size: 12px; color: var(--text3); white-space: nowrap; }
+  input[type="text"], select, input[type="date"] { height: 32px; border: 0.5px solid var(--border); border-radius: 7px; padding: 0 10px; font-size: 13px; background: var(--surface2); color: var(--text); outline: none; transition: border-color 0.15s; }
+  input[type="text"]:focus, select:focus, input[type="date"]:focus { border-color: var(--accent); }
+  input[type="text"] { min-width: 180px; }
+  select { cursor: pointer; }
+  .btn { height: 32px; padding: 0 12px; border: 0.5px solid var(--border); border-radius: 7px; background: var(--surface2); font-size: 13px; cursor: pointer; color: var(--text2); transition: background 0.15s, color 0.15s; white-space: nowrap; }
+  .btn:hover { background: var(--border); color: var(--text); }
+  .btn-primary { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); font-weight: 500; }
+  .btn-primary:hover { opacity: 0.85; }
+  .spacer { flex: 1; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; padding: 1rem 1.5rem; }
+  .stat { background: var(--surface); border: 0.5px solid var(--border2); border-radius: 10px; padding: 0.85rem 1rem; }
+  .stat .val { font-size: 22px; font-weight: 500; line-height: 1; margin-bottom: 4px; }
+  .stat .lbl { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.04em; }
+  .s-total .val { color: var(--text); }
+  .s-ok .val    { color: #0f6e56; }
+  .s-rej .val   { color: #993c1d; }
+  .s-rep .val   { color: #ba7517; }
+  .s-no .val    { color: #a32d2d; }
+  .s-par .val   { color: #3b6d11; }
+  [data-theme="dark"] .s-ok .val  { color: #5dcaa5; }
+  [data-theme="dark"] .s-rej .val { color: #f0997b; }
+  [data-theme="dark"] .s-rep .val { color: #ef9f27; }
+  [data-theme="dark"] .s-no .val  { color: #f09595; }
+  [data-theme="dark"] .s-par .val { color: #97c459; }
+
+  .tabla-wrap { padding: 0 1.5rem 2rem; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 12px; overflow: hidden; border: 0.5px solid var(--border2); font-size: 13px; }
+  thead { background: var(--surface2); }
+  th { padding: 9px 14px; text-align: left; font-weight: 500; font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 0.5px solid var(--border); white-space: nowrap; }
+  td { padding: 10px 14px; border-bottom: 0.5px solid var(--border2); vertical-align: middle; color: var(--text); }
   tr:last-child td { border-bottom: none; }
-  tr:hover td { background: #fafaf7; }
-  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; white-space: nowrap; }
-  .b-exitoso   { background: #e1f5ee; color: #0f6e56; }
-  .b-entregado { background: #e1f5ee; color: #0f6e56; }
-  .b-rechazado { background: #faece7; color: #993c1d; }
-  .b-reprogramado { background: #faeeda; color: #ba7517; }
-  .b-parcial   { background: #eaf3de; color: #3b6d11; }
-  .b-noentregado { background: #fcebeb; color: #a32d2d; }
-  .b-default   { background: #f0efe8; color: #5f5e5a; }
-  .badge-tienda { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; background: #e8e8f0; color: #444; white-space: nowrap; }
-  #cargando { text-align: center; padding: 3rem; color: #888; font-size: 15px; }
-  #sin-datos { text-align: center; padding: 2rem; color: #888; }
-  @media (max-width: 600px) {
+  tr:hover td { background: var(--surface2); }
+  .pedido-num { font-weight: 500; font-size: 13px; font-family: 'SF Mono', 'Fira Code', monospace; letter-spacing: 0.02em; }
+
+  .badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; white-space: nowrap; letter-spacing: 0.02em; }
+  .b-ok  { background: #e1f5ee; color: #085041; }
+  .b-rej { background: #faece7; color: #712b13; }
+  .b-rep { background: #faeeda; color: #633806; }
+  .b-par { background: #eaf3de; color: #27500a; }
+  .b-no  { background: #fcebeb; color: #791f1f; }
+  .b-def { background: var(--surface2); color: var(--text2); }
+  [data-theme="dark"] .b-ok  { background: #04342c; color: #9fe1cb; }
+  [data-theme="dark"] .b-rej { background: #4a1b0c; color: #f5c4b3; }
+  [data-theme="dark"] .b-rep { background: #412402; color: #fac775; }
+  [data-theme="dark"] .b-par { background: #173404; color: #c0dd97; }
+  [data-theme="dark"] .b-no  { background: #501313; color: #f7c1c1; }
+
+  .tienda-tag { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 5px; font-size: 11px; font-weight: 500; background: var(--surface2); color: var(--text2); border: 0.5px solid var(--border); white-space: nowrap; }
+
+  #msg { text-align: center; padding: 3rem 1.5rem; color: var(--text3); font-size: 14px; }
+
+  @media (max-width: 640px) {
     header { padding: 0.75rem 1rem; }
-    .controles { padding: 0.75rem 1rem; }
-    .resumen { padding: 1rem; }
-    .contenedor { padding: 0 0.75rem 2rem; }
-    th, td { padding: 8px; font-size: 13px; }
+    .controles { padding: 0.65rem 1rem; }
+    .stats { padding: 0.75rem 1rem; }
+    .tabla-wrap { padding: 0 0.75rem 2rem; }
+    input[type="text"] { min-width: 120px; }
   }
 </style>
 </head>
 <body>
+
 <header>
-  <h1>📦 Monitoreo de Entregas</h1>
-  <span id="ultima-act">Cargando...</span>
+  <div class="header-left">
+    <div class="logo-icon">📦</div>
+    <h1>Monitoreo de Entregas</h1>
+  </div>
+  <div class="header-right">
+    <span id="ultima-act">Cargando...</span>
+    <button class="btn-theme" id="btn-tema" title="Modo oscuro" onclick="toggleTema()">🌙</button>
+  </div>
 </header>
+
 <div class="controles">
   <input type="text" id="buscar" placeholder="Buscar pedido, municipio..." oninput="filtrar()">
   <select id="filtro-tienda" onchange="filtrar()">
     <option value="">Todas las tiendas</option>
-    <option value="PUEBLA">PUEBLA</option>
-    <option value="POLANCO">POLANCO</option>
-    <option value="MIRAMONTES">MIRAMONTES</option>
-    <option value="ZARAGOZA">ZARAGOZA</option>
-    <option value="SANTA FE">SANTA FE</option>
-    <option value="GUSTAVO BAZ">GUSTAVO BAZ</option>
-    <option value="QUERÉTARO">QUERÉTARO</option>
-    <option value="INTERLOMAS">INTERLOMAS</option>
-    <option value="TOREO">TOREO</option>
-    <option value="LA VIGA">LA VIGA</option>
-    <option value="PERINORTE">PERINORTE</option>
-    <option value="STUDIO">STUDIO</option>
-    <option value="METEPEC">METEPEC</option>
-    <option value="VENDEDORES">VENDEDORES (EM/FOR/EQ)</option>
+    <option value="PUEBLA">Puebla</option>
+    <option value="POLANCO">Polanco</option>
+    <option value="MIRAMONTES">Miramontes</option>
+    <option value="ZARAGOZA">Zaragoza</option>
+    <option value="SANTA FE">Santa Fe</option>
+    <option value="GUSTAVO BAZ">Gustavo Baz</option>
+    <option value="QUERÉTARO">Querétaro</option>
+    <option value="INTERLOMAS">Interlomas</option>
+    <option value="TOREO">Toreo</option>
+    <option value="LA VIGA">La Viga</option>
+    <option value="PERINORTE">Perinorte</option>
+    <option value="STUDIO">Studio</option>
+    <option value="METEPEC">Metepec</option>
+    <option value="VENDEDORES">Vendedores (EM / FOR / EQ)</option>
   </select>
   <select id="filtro-estatus" onchange="filtrar()">
     <option value="">Todos los estatus</option>
@@ -91,22 +148,27 @@
     <option value="parcial">Parcial</option>
     <option value="no entregado">No entregado</option>
   </select>
-  <span class="lbl-fecha">Fecha:</span>
-  <input type="date" id="filtro-fecha" onchange="filtrar()">
-  <button class="btn-hoy" onclick="ponerHoy()">Hoy</button>
-  <button onclick="limpiarFecha()">Ver todo</button>
-  <button onclick="cargarDatos()">↻ Actualizar</button>
+  <div class="ctrl-group">
+    <span class="ctrl-label">Fecha</span>
+    <input type="date" id="filtro-fecha" onchange="filtrar()">
+  </div>
+  <button class="btn btn-primary" onclick="ponerHoy()">Hoy</button>
+  <button class="btn" onclick="limpiarFecha()">Ver todo</button>
+  <div class="spacer"></div>
+  <button class="btn" onclick="cargarDatos()">↻ Actualizar</button>
 </div>
-<div class="resumen">
-  <div class="stat-card"><div class="num" id="s-total">—</div><div class="lbl">Total</div></div>
-  <div class="stat-card stat-exitoso"><div class="num" id="s-exitoso">—</div><div class="lbl">Exitoso / Entregado</div></div>
-  <div class="stat-card stat-rechazado"><div class="num" id="s-rechazado">—</div><div class="lbl">Rechazado</div></div>
-  <div class="stat-card stat-reprog"><div class="num" id="s-reprog">—</div><div class="lbl">Reprogramado</div></div>
-  <div class="stat-card stat-noent"><div class="num" id="s-noent">—</div><div class="lbl">No entregado</div></div>
-  <div class="stat-card stat-parcial"><div class="num" id="s-parcial">—</div><div class="lbl">Parcial</div></div>
+
+<div class="stats">
+  <div class="stat s-total"><div class="val" id="s-total">—</div><div class="lbl">Total</div></div>
+  <div class="stat s-ok"><div class="val" id="s-ok">—</div><div class="lbl">Entregado</div></div>
+  <div class="stat s-rej"><div class="val" id="s-rej">—</div><div class="lbl">Rechazado</div></div>
+  <div class="stat s-rep"><div class="val" id="s-rep">—</div><div class="lbl">Reprogramado</div></div>
+  <div class="stat s-no"><div class="val" id="s-no">—</div><div class="lbl">No entregado</div></div>
+  <div class="stat s-par"><div class="val" id="s-par">—</div><div class="lbl">Parcial</div></div>
 </div>
-<div class="contenedor">
-  <div id="cargando">Conectando con el archivo...</div>
+
+<div class="tabla-wrap">
+  <div id="msg">Conectando con el archivo...</div>
   <table id="tabla" style="display:none;">
     <thead>
       <tr>
@@ -121,181 +183,176 @@
     </thead>
     <tbody id="tbody"></tbody>
   </table>
-  <div id="sin-datos" style="display:none;">No se encontraron resultados.</div>
 </div>
+
 <script>
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw280EIgpDEOAiP-zaYvcKZgxhQBoIzhV1Kyy3LAE6WquErvzig4d772qKSt083WbR3/exec';
+const URL_API = 'https://script.google.com/macros/s/AKfycbw280EIgpDEOAiP-zaYvcKZgxhQBoIzhV1Kyy3LAE6WquErvzig4d772qKSt083WbR3/exec';
+let datos = [];
 
-  let todosLosDatos = [];
+const TIENDAS = {
+  'DECOSFE':'SANTA FE','DECOINT':'INTERLOMAS','DECOZAR':'ZARAGOZA',
+  'DECOPOL':'POLANCO','DECOTOREO':'TOREO','DECOMIR':'MIRAMONTES',
+  'PUE':'PUEBLA','OPU':'PUEBLA',
+  'POL':'POLANCO','OPO':'POLANCO',
+  'MIR':'MIRAMONTES','OMI':'MIRAMONTES',
+  'ZAR':'ZARAGOZA','OZA':'ZARAGOZA',
+  'SFE':'SANTA FE','OSF':'SANTA FE',
+  'KGB':'GUSTAVO BAZ','GOU':'GUSTAVO BAZ',
+  'QRO':'QUERÉTARO','OQR':'QUERÉTARO',
+  'INT':'INTERLOMAS','OIN':'INTERLOMAS',
+  'TOR':'TOREO','OTO':'TOREO',
+  'LVI':'LA VIGA','OLV':'LA VIGA',
+  'KOU':'PERINORTE','KPE':'PERINORTE',
+  'STU':'STUDIO','CD':'STUDIO',
+  'MET':'METEPEC','OME':'METEPEC','ET':'METEPEC',
+  'EM':'VENDEDORES','FOR':'VENDEDORES','EQ':'VENDEDORES',
+};
 
-  // Mapa de prefijos a tienda
-  const TIENDAS = {
-    'PUE': 'PUEBLA', 'OPU': 'PUEBLA',
-    'POL': 'POLANCO', 'OPO': 'POLANCO',
-    'MIR': 'MIRAMONTES', 'OMI': 'MIRAMONTES',
-    'ZAR': 'ZARAGOZA', 'OZA': 'ZARAGOZA',
-    'SFE': 'SANTA FE', 'OSF': 'SANTA FE', 'DECO': 'SANTA FE',
-    'KGB': 'GUSTAVO BAZ', 'GOU': 'GUSTAVO BAZ',
-    'QRO': 'QUERÉTARO', 'OQR': 'QUERÉTARO',
-    'INT': 'INTERLOMAS', 'OIN': 'INTERLOMAS',
-    'TOR': 'TOREO', 'OTO': 'TOREO',
-    'LVI': 'LA VIGA', 'OLV': 'LA VIGA',
-    'KOU': 'PERINORTE', 'KPE': 'PERINORTE',
-    'STU': 'STUDIO', 'CD': 'STUDIO',
-    'MET': 'METEPEC', 'OME': 'METEPEC', 'ET': 'METEPEC',
-    'EM': 'VENDEDORES', 'FOR': 'VENDEDORES', 'EQ': 'VENDEDORES',
-  };
+function tiendaDe(pedido) {
+  if (!pedido) return 'OTRA';
+  const p = pedido.toUpperCase().trim();
+  const keys = Object.keys(TIENDAS).sort((a,b) => b.length - a.length);
+  for (const k of keys) if (p.startsWith(k)) return TIENDAS[k];
+  return 'OTRA';
+}
 
-  function detectarTienda(pedido) {
-    if (!pedido) return 'OTRA';
-    const p = pedido.toUpperCase().trim();
-    // Ordenar por longitud descendente para que prefijos largos tengan prioridad
-    const prefijos = Object.keys(TIENDAS).sort((a, b) => b.length - a.length);
-    for (const pref of prefijos) {
-      if (p.startsWith(pref)) return TIENDAS[pref];
-    }
-    return 'OTRA';
-  }
+function normFecha(f) {
+  if (!f || !String(f).trim()) return '';
+  const d = new Date(String(f).trim());
+  if (!isNaN(d.getTime())) return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const sl = String(f).toLowerCase().trim();
+  const m1 = sl.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (m1) { let y=m1[3]; if(y.length===2)y='20'+y; return `${y}-${m1[2].padStart(2,'0')}-${m1[1].padStart(2,'0')}`; }
+  const MES={enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,julio:7,agosto:8,septiembre:9,octubre:10,noviembre:11,diciembre:12};
+  const m2 = sl.match(/^(\d{1,2})[-\s]([a-z]+)$/);
+  if (m2 && MES[m2[2]]) return `${new Date().getFullYear()}-${String(MES[m2[2]]).padStart(2,'0')}-${m2[1].padStart(2,'0')}`;
+  return '';
+}
 
-  function normalizarFecha(f) {
-    if (!f || String(f).trim() === '') return '';
-    const s = String(f).trim();
-    const d = new Date(s);
-    if (!isNaN(d.getTime())) {
-      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    }
-    const sl = s.toLowerCase();
-    const m1 = sl.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
-    if (m1) {
-      let [_, dia, mo, y] = m1;
-      if (y.length === 2) y = '20' + y;
-      return `${y}-${mo.padStart(2,'0')}-${dia.padStart(2,'0')}`;
-    }
-    const MESES = {enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,julio:7,agosto:8,septiembre:9,octubre:10,noviembre:11,diciembre:12};
-    const anio = new Date().getFullYear();
-    const m2 = sl.match(/^(\d{1,2})[-\s]([a-z]+)$/);
-    if (m2) {
-      const mo = MESES[m2[2]];
-      if (mo) return `${anio}-${String(mo).padStart(2,'0')}-${m2[1].padStart(2,'0')}`;
-    }
-    return '';
-  }
+function hoy() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
 
-  function fechaHoy() {
-    const hoy = new Date();
-    return `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
-  }
+function ponerHoy() { document.getElementById('filtro-fecha').value = hoy(); filtrar(); }
+function limpiarFecha() { document.getElementById('filtro-fecha').value = ''; filtrar(); }
 
-  function ponerHoy() {
-    document.getElementById('filtro-fecha').value = fechaHoy();
-    filtrar();
-  }
+function badgeCls(e) {
+  const s = (e||'').toLowerCase();
+  if (s.includes('exitoso')||s==='entregado') return 'b-ok';
+  if (s.includes('rechazado')) return 'b-rej';
+  if (s.includes('reprogramado')) return 'b-rep';
+  if (s.includes('parcial')) return 'b-par';
+  if (s.includes('no entregado')) return 'b-no';
+  return 'b-def';
+}
 
-  function limpiarFecha() {
-    document.getElementById('filtro-fecha').value = '';
-    filtrar();
-  }
+function fmtFecha(f) {
+  const d = new Date(f);
+  if (!isNaN(d.getTime())) return d.toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'});
+  return f||'—';
+}
 
-  function badgeClass(est) {
-    const e = (est || '').toLowerCase().trim();
-    if (e.includes('exitoso') || e === 'entregado') return 'b-exitoso';
-    if (e.includes('rechazado')) return 'b-rechazado';
-    if (e.includes('reprogramado')) return 'b-reprogramado';
-    if (e.includes('parcial')) return 'b-parcial';
-    if (e.includes('no entregado')) return 'b-noentregado';
-    return 'b-default';
-  }
+function filtrar() {
+  const q     = document.getElementById('buscar').value.toLowerCase();
+  const tienda= document.getElementById('filtro-tienda').value;
+  const est   = document.getElementById('filtro-estatus').value.toLowerCase();
+  const fecha = document.getElementById('filtro-fecha').value;
 
-  function actualizarResumen(datos) {
-    const exitosos   = datos.filter(r => { const e=(r.estatus||'').toLowerCase(); return e.includes('exitoso')||e==='entregado'; }).length;
-    const rechazados = datos.filter(r => (r.estatus||'').toLowerCase().includes('rechazado')).length;
-    const reprog     = datos.filter(r => (r.estatus||'').toLowerCase().includes('reprogramado')).length;
-    const parcial    = datos.filter(r => (r.estatus||'').toLowerCase().includes('parcial')).length;
-    const noent      = datos.filter(r => (r.estatus||'').toLowerCase().includes('no entregado')).length;
-    document.getElementById('s-total').textContent     = datos.length;
-    document.getElementById('s-exitoso').textContent   = exitosos;
-    document.getElementById('s-rechazado').textContent = rechazados;
-    document.getElementById('s-reprog').textContent    = reprog;
-    document.getElementById('s-parcial').textContent   = parcial;
-    document.getElementById('s-noent').textContent     = noent;
-  }
-
-  function filtrar() {
-    const texto  = document.getElementById('buscar').value.toLowerCase();
-    const tienda = document.getElementById('filtro-tienda').value;
-    const estatus= document.getElementById('filtro-estatus').value.toLowerCase();
-    const fecha  = document.getElementById('filtro-fecha').value;
-
-    const filtrados = todosLosDatos.filter(r => {
-      const matchTexto  = !texto  || [r.pedido, r.muni, r.subest].some(v => (v||'').toLowerCase().includes(texto));
-      const matchTienda = !tienda || r.tienda === tienda;
-      const matchEst    = !estatus|| (r.estatus||'').toLowerCase().includes(estatus);
-      const matchFecha  = !fecha  || normalizarFecha(r.fecha) === fecha;
-      return matchTexto && matchTienda && matchEst && matchFecha;
-    });
-
-    renderTabla(filtrados);
-    actualizarResumen(filtrados);
-  }
-
-  function formatearFechaLegible(f) {
-    if (!f) return '—';
-    const d = new Date(f);
-    if (!isNaN(d.getTime())) return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
-    return f;
-  }
-
-  function renderTabla(datos) {
-    const tbody    = document.getElementById('tbody');
-    const tabla    = document.getElementById('tabla');
-    const sinDatos = document.getElementById('sin-datos');
-    if (!datos.length) { tabla.style.display='none'; sinDatos.style.display='block'; return; }
-    sinDatos.style.display = 'none';
-    tabla.style.display = 'table';
-    tbody.innerHTML = datos.map(r => `
-      <tr>
-        <td><strong>${r.pedido||'—'}</strong></td>
-        <td><span class="badge-tienda">${r.tienda||'—'}</span></td>
-        <td style="color:#888;font-size:13px;">${formatearFechaLegible(r.fecha)}</td>
-        <td>${r.muni||'—'}</td>
-        <td>${r.hora||'—'}</td>
-        <td><span class="badge ${badgeClass(r.estatus)}">${r.estatus||'—'}</span></td>
-        <td style="color:#666;font-size:13px;">${r.subest||'—'}</td>
-      </tr>
-    `).join('');
-  }
-
-  async function cargarDatos() {
-    document.getElementById('cargando').style.display = 'block';
-    document.getElementById('tabla').style.display = 'none';
-    document.getElementById('sin-datos').style.display = 'none';
-    document.getElementById('ultima-act').textContent = 'Actualizando...';
-    try {
-      const resp = await fetch(APPS_SCRIPT_URL);
-      if (!resp.ok) throw new Error('Error al conectar');
-      const datos = await resp.json();
-      todosLosDatos = datos
-        .filter(r => r.pedido && r.pedido.trim() !== '')
-        .map(r => ({ ...r, tienda: detectarTienda(r.pedido) }));
-      filtrar();
-      const ahora = new Date();
-      document.getElementById('ultima-act').textContent =
-        'Actualizado: ' + ahora.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
-    } catch (err) {
-      document.getElementById('cargando').textContent = '⚠️ No se pudo conectar.';
-      document.getElementById('ultima-act').textContent = 'Error de conexión';
-      console.error(err);
-    } finally {
-      document.getElementById('cargando').style.display = todosLosDatos.length ? 'none' : 'block';
-    }
-  }
-
-  window.addEventListener('load', () => {
-    document.getElementById('filtro-fecha').value = fechaHoy();
-    cargarDatos();
+  const res = datos.filter(r => {
+    const mt = !q      || [r.pedido,r.muni,r.subest].some(v=>(v||'').toLowerCase().includes(q));
+    const mti= !tienda || r.tienda===tienda;
+    const me = !est    || (r.estatus||'').toLowerCase().includes(est);
+    const mf = !fecha  || normFecha(r.fecha)===fecha;
+    return mt&&mti&&me&&mf;
   });
 
-  setInterval(cargarDatos, 5 * 60 * 1000);
+  const ok  = res.filter(r=>{const e=(r.estatus||'').toLowerCase();return e.includes('exitoso')||e==='entregado';}).length;
+  const rej = res.filter(r=>(r.estatus||'').toLowerCase().includes('rechazado')).length;
+  const rep = res.filter(r=>(r.estatus||'').toLowerCase().includes('reprogramado')).length;
+  const par = res.filter(r=>(r.estatus||'').toLowerCase().includes('parcial')).length;
+  const no  = res.filter(r=>(r.estatus||'').toLowerCase().includes('no entregado')).length;
+  document.getElementById('s-total').textContent = res.length;
+  document.getElementById('s-ok').textContent    = ok;
+  document.getElementById('s-rej').textContent   = rej;
+  document.getElementById('s-rep').textContent   = rep;
+  document.getElementById('s-par').textContent   = par;
+  document.getElementById('s-no').textContent    = no;
+
+  const msg   = document.getElementById('msg');
+  const tabla = document.getElementById('tabla');
+  const tbody = document.getElementById('tbody');
+
+  if (!res.length) {
+    tabla.style.display='none';
+    msg.style.display='block';
+    msg.textContent='No se encontraron resultados.';
+    return;
+  }
+  msg.style.display='none';
+  tabla.style.display='table';
+  tbody.innerHTML = res.map(r=>`
+    <tr>
+      <td><span class="pedido-num">${r.pedido||'—'}</span></td>
+      <td><span class="tienda-tag">${r.tienda||'—'}</span></td>
+      <td style="color:var(--text3);font-size:12px;">${fmtFecha(r.fecha)}</td>
+      <td>${r.muni||'—'}</td>
+      <td style="font-variant-numeric:tabular-nums;color:var(--text2);">${r.hora||'—'}</td>
+      <td><span class="badge ${badgeCls(r.estatus)}">${r.estatus||'—'}</span></td>
+      <td style="color:var(--text2);font-size:12px;">${r.subest||'—'}</td>
+    </tr>
+  `).join('');
+}
+
+function cargarDatos() {
+  document.getElementById('msg').textContent='Actualizando...';
+  document.getElementById('msg').style.display='block';
+  document.getElementById('tabla').style.display='none';
+  document.getElementById('ultima-act').textContent='Actualizando...';
+  const xhr = new XMLHttpRequest();
+  xhr.open('GET', URL_API + '?t=' + Date.now(), true);
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      try {
+        const raw = JSON.parse(xhr.responseText);
+        datos = raw
+          .filter(r=>r.pedido&&r.pedido.trim())
+          .map(r=>({...r, tienda: tiendaDe(r.pedido)}));
+        filtrar();
+        document.getElementById('ultima-act').textContent =
+          'Actualizado ' + new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+      } catch(e) {
+        document.getElementById('msg').textContent='⚠️ Error al leer datos.';
+        document.getElementById('ultima-act').textContent='Error';
+      }
+    } else {
+      document.getElementById('msg').textContent='⚠️ No se pudo conectar.';
+      document.getElementById('ultima-act').textContent='Error';
+    }
+  };
+  xhr.onerror = function() {
+    document.getElementById('msg').textContent='⚠️ No se pudo conectar.';
+    document.getElementById('ultima-act').textContent='Error';
+  };
+  xhr.send();
+}
+
+function toggleTema() {
+  const dark = document.documentElement.getAttribute('data-theme')==='dark';
+  document.documentElement.setAttribute('data-theme', dark?'':'dark');
+  document.getElementById('btn-tema').textContent = dark?'🌙':'☀️';
+  localStorage.setItem('tema', dark?'light':'dark');
+}
+
+window.addEventListener('load',()=>{
+  const t = localStorage.getItem('tema')||'light';
+  document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('btn-tema').textContent = t==='dark'?'☀️':'🌙';
+  document.getElementById('filtro-fecha').value = hoy();
+  cargarDatos();
+});
+
+setInterval(cargarDatos, 5*60*1000);
 </script>
 </body>
 </html>
