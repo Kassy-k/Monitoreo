@@ -186,7 +186,7 @@
 </div>
 
 <script>
-const URL_API = 'https://script.google.com/macros/s/AKfycbw280EIgpDEOAiP-zaYvcKZgxhQBoIzhV1Kyy3LAE6WquErvzig4d772qKSt083WbR3/exec';
+const URL_API = 'https://script.google.com/macros/s/AKfycbxo-Wiwh1_TrvJU4aiQDKV-61yiPOcS66pccnaXXChI-0-6kavmXDTVd6kL0k6fxB5u/exec';
 let datos = [];
 
 const TIENDAS = {
@@ -309,32 +309,44 @@ function cargarDatos() {
   document.getElementById('msg').style.display='block';
   document.getElementById('tabla').style.display='none';
   document.getElementById('ultima-act').textContent='Actualizando...';
-  const xhr = new XMLHttpRequest();
-  xhr.open('GET', URL_API + '?t=' + Date.now(), true);
-  xhr.onload = function() {
-    if (xhr.status === 200) {
-      try {
-        const raw = JSON.parse(xhr.responseText);
-        datos = raw
-          .filter(r=>r.pedido&&r.pedido.trim())
-          .map(r=>({...r, tienda: tiendaDe(r.pedido)}));
-        filtrar();
-        document.getElementById('ultima-act').textContent =
-          'Actualizado ' + new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
-      } catch(e) {
-        document.getElementById('msg').textContent='⚠️ Error al leer datos.';
-        document.getElementById('ultima-act').textContent='Error';
-      }
-    } else {
-      document.getElementById('msg').textContent='⚠️ No se pudo conectar.';
+
+  // Limpiar callback anterior
+  const cbName = 'cb_' + Date.now();
+  const oldScript = document.getElementById('jsonp-script');
+  if (oldScript) oldScript.remove();
+
+  // Timeout por si falla
+  const timer = setTimeout(function() {
+    document.getElementById('msg').textContent='⚠️ No se pudo conectar.';
+    document.getElementById('ultima-act').textContent='Error';
+    if (window[cbName]) delete window[cbName];
+  }, 15000);
+
+  window[cbName] = function(raw) {
+    clearTimeout(timer);
+    delete window[cbName];
+    try {
+      datos = raw
+        .filter(r=>r.pedido&&r.pedido.trim())
+        .map(r=>({...r, tienda: tiendaDe(r.pedido)}));
+      filtrar();
+      document.getElementById('ultima-act').textContent =
+        'Actualizado ' + new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+    } catch(e) {
+      document.getElementById('msg').textContent='⚠️ Error al leer datos.';
       document.getElementById('ultima-act').textContent='Error';
     }
   };
-  xhr.onerror = function() {
+
+  const s = document.createElement('script');
+  s.id = 'jsonp-script';
+  s.src = URL_API + '?callback=' + cbName + '&t=' + Date.now();
+  s.onerror = function() {
+    clearTimeout(timer);
     document.getElementById('msg').textContent='⚠️ No se pudo conectar.';
     document.getElementById('ultima-act').textContent='Error';
   };
-  xhr.send();
+  document.head.appendChild(s);
 }
 
 function toggleTema() {
