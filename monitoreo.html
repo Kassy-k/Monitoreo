@@ -129,7 +129,7 @@
   </table>
 </div>
 <script>
-var URL_API = 'https://script.google.com/macros/s/AKfycbxo-Wiwh1_TrvJU4aiQDKV-61yiPOcS66pccnaXXChI-0-6kavmXDTVd6kL0k6fxB5u/exec';
+var URL_API = 'https://monitoreo.nr3551642.workers.dev/';
 var datos = [];
 
 var TIENDAS = {
@@ -156,7 +156,10 @@ function tiendaDe(pedido) {
 function normFecha(f) {
   if (!f || !String(f).trim()) return '';
   var d = new Date(String(f).trim());
-  if (!isNaN(d.getTime())) return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  if (!isNaN(d.getTime())) {
+    var mx = new Date(d.getTime() + (-6*3600000) + d.getTimezoneOffset()*60000);
+    return mx.getFullYear()+'-'+String(mx.getMonth()+1).padStart(2,'0')+'-'+String(mx.getDate()).padStart(2,'0');
+  }
   var sl = String(f).toLowerCase().trim();
   var m1 = sl.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
   if (m1) { var y=m1[3]; if(y.length===2)y='20'+y; return y+'-'+m1[2].padStart(2,'0')+'-'+m1[1].padStart(2,'0'); }
@@ -240,18 +243,17 @@ function cargarDatos() {
   document.getElementById('msg').style.display='block';
   document.getElementById('tabla').style.display='none';
   document.getElementById('ultima-act').textContent='Actualizando...';
-  var old=document.getElementById('jsonp');
-  if(old) old.parentNode.removeChild(old);
-  var s=document.createElement('script');
-  s.id='jsonp';
-  s.src=URL_API+'?callback=recibirDatos&t='+Date.now();
-  document.head.appendChild(s);
-  setTimeout(function(){
-    if(document.getElementById('msg').textContent==='Actualizando...'){
+  fetch(URL_API+'?t='+Date.now())
+    .then(function(r){ return r.json(); })
+    .then(function(raw){
+      datos=raw.filter(function(r){return r.pedido&&r.pedido.trim();}).map(function(r){r.tienda=tiendaDe(r.pedido);return r;});
+      filtrar();
+      document.getElementById('ultima-act').textContent='Actualizado '+new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+    })
+    .catch(function(){
       document.getElementById('msg').textContent='⚠️ No se pudo conectar.';
       document.getElementById('ultima-act').textContent='Error';
-    }
-  },15000);
+    });
 }
 
 function toggleTema(){
