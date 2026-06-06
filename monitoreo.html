@@ -59,6 +59,26 @@
   @media(max-width:640px){
     header{padding:0.75rem 1rem;} .controles{padding:0.65rem 1rem;} .stats{padding:0.75rem 1rem;} .tabla-wrap{padding:0 0.75rem 2rem;} input[type="text"]{min-width:120px;}
   }
+  .btn-edit { height:34px; padding:0 12px; border:0.5px solid var(--border); border-radius:8px; background:var(--surface2); font-size:13px; cursor:pointer; color:var(--text2); transition:background 0.15s; }
+  .btn-edit:hover { background:var(--border); }
+  .btn-edit.activo { background:#e1f5ee; border-color:#0f6e56; color:#0f6e56; font-weight:500; }
+  [data-theme="dark"] .btn-edit.activo { background:#04342c; border-color:#5dcaa5; color:#5dcaa5; }
+  .btn-edit-fila { background:none; border:none; cursor:pointer; font-size:15px; padding:2px 6px; border-radius:6px; color:var(--text3); }
+  .btn-edit-fila:hover { background:var(--surface2); color:var(--accent); }
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; }
+  .modal-overlay.visible { display:flex; }
+  .modal { background:var(--surface); border-radius:16px; padding:1.5rem; width:90%; max-width:420px; box-shadow:0 8px 32px rgba(0,0,0,0.2); }
+  .modal h3 { font-size:15px; font-weight:500; margin-bottom:1rem; }
+  .modal .pedido-tag { font-family:monospace; background:var(--surface2); padding:3px 8px; border-radius:6px; font-size:13px; margin-bottom:1rem; display:inline-block; }
+  .modal label { display:block; font-size:12px; color:var(--text3); margin-bottom:4px; margin-top:12px; }
+  .modal input, .modal select { width:100%; height:36px; border:0.5px solid var(--border); border-radius:8px; padding:0 10px; font-size:14px; background:var(--surface2); color:var(--text); outline:none; }
+  .modal input:focus, .modal select:focus { border-color:var(--accent); }
+  .modal-btns { display:flex; gap:8px; margin-top:1.25rem; }
+  .modal-btns button { flex:1; height:38px; border-radius:8px; border:none; cursor:pointer; font-size:14px; font-weight:500; }
+  .btn-guardar { background:var(--accent); color:#fff; }
+  .btn-guardar:hover { opacity:0.88; }
+  .btn-cancelar { background:var(--surface2); color:var(--text2); border:0.5px solid var(--border) !important; }
+  .guardando { opacity:0.6; pointer-events:none; }
 </style>
 </head>
 <body>
@@ -117,12 +137,38 @@
   <div class="stat s-no"><div class="val" id="s-no">—</div><div class="lbl">No entregado</div></div>
   <div class="stat s-par"><div class="val" id="s-par">—</div><div class="lbl">Parcial</div></div>
 </div>
+<!-- Modal edición -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h3>Editar pedido</h3>
+    <span class="pedido-tag" id="modal-pedido"></span>
+    <label>Hora reportada</label>
+    <input type="text" id="modal-hora" placeholder="ej. 14:35">
+    <label>Estatus</label>
+    <select id="modal-estatus">
+      <option value="Exitoso">Exitoso</option>
+      <option value="Entregado">Entregado</option>
+      <option value="Rechazado">Rechazado</option>
+      <option value="Reprogramado">Reprogramado</option>
+      <option value="Parcial">Parcial</option>
+      <option value="No entregado">No entregado</option>
+    </select>
+    <label>Sub estatus</label>
+    <input type="text" id="modal-subest" placeholder="ej. Cliente ausente">
+    <div class="modal-btns">
+      <button class="btn-cancelar" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-guardar" id="btn-guardar" onclick="guardarCambios()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <div class="tabla-wrap">
   <div id="msg">Conectando...</div>
   <table id="tabla" style="display:none;">
     <thead>
       <tr>
         <th>Pedido</th><th>Tienda</th><th>Fecha</th><th>Municipio</th><th>Hora</th><th>Estatus</th><th>Sub estatus</th>
+        <th id="col-editar" style="display:none;"></th>
       </tr>
     </thead>
     <tbody id="tbody"></tbody>
@@ -130,6 +176,9 @@
 </div>
 <script>
 var URL_API = 'https://monitoreo.nr3551642.workers.dev/';
+var URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbxxxOBuYI9_t4jIdFo9pWAsdHDqk1D-VzmYjh5-TRyArP9MQDcOGPuZy21LIH3oU7ZA/exec';
+var PASS = 'KasselMonitoreo';
+var modoEdicion = false;
 var datos = [];
 
 var TIENDAS = {
@@ -223,7 +272,7 @@ function filtrar() {
   msg.style.display='none';
   tabla.style.display='table';
   tbody.innerHTML=res.map(function(r){
-    return '<tr><td><span class="pedido-num">'+(r.pedido||'—')+'</span></td><td><span class="tienda-tag">'+(r.tienda||'—')+'</span></td><td style="color:var(--text3);font-size:12px;">'+fmtFecha(r.fecha)+'</td><td>'+(r.muni||'—')+'</td><td style="color:var(--text2);">'+(r.hora||'—')+'</td><td><span class="badge '+badgeCls(r.estatus)+'">'+(r.estatus||'—')+'</span></td><td style="color:var(--text2);font-size:12px;">'+(r.subest||'—')+'</td></tr>';
+    return '<tr><td><span class="pedido-num">'+(r.pedido||'—')+'</span></td><td><span class="tienda-tag">'+(r.tienda||'—')+'</span></td><td style="color:var(--text3);font-size:12px;">'+fmtFecha(r.fecha)+'</td><td>'+(r.muni||'—')+'</td><td style="color:var(--text2);">'+(r.hora||'—')+'</td><td><span class="badge '+badgeCls(r.estatus)+'">'+(r.estatus||'—')+'</span></td><td style="color:var(--text2);font-size:12px;">'+(r.subest||'—')+'</td>'+(modoEdicion?'<td><button class="btn-edit-fila" onclick="abrirModal('+JSON.stringify(r)+')">✏️</button></td>':'<td style="display:none;"></td>')+'</tr>';
   }).join('');
 }
 
@@ -274,6 +323,78 @@ window.onload=function(){
 };
 
 setInterval(cargarDatos,5*60*1000);
+
+var filaActual = null;
+
+function toggleEdicion() {
+  if (!modoEdicion) {
+    var pw = prompt('Contraseña:');
+    if (pw !== PASS) { alert('Contraseña incorrecta'); return; }
+    modoEdicion = true;
+    document.getElementById('btn-edicion').classList.add('activo');
+    document.getElementById('btn-edicion').textContent = '🔒 Salir de edición';
+    document.getElementById('col-editar').style.display = '';
+  } else {
+    modoEdicion = false;
+    document.getElementById('btn-edicion').classList.remove('activo');
+    document.getElementById('btn-edicion').textContent = '✏️ Editar';
+    document.getElementById('col-editar').style.display = 'none';
+  }
+  filtrar();
+}
+
+function abrirModal(r) {
+  filaActual = r;
+  document.getElementById('modal-pedido').textContent = r.pedido;
+  document.getElementById('modal-hora').value = r.hora || '';
+  document.getElementById('modal-estatus').value = r.estatus || 'Exitoso';
+  document.getElementById('modal-subest').value = r.subest || '';
+  document.getElementById('modal-overlay').classList.add('visible');
+}
+
+function cerrarModal() {
+  document.getElementById('modal-overlay').classList.remove('visible');
+  filaActual = null;
+}
+
+function guardarCambios() {
+  if (!filaActual) return;
+  var hora   = document.getElementById('modal-hora').value.trim();
+  var estatus= document.getElementById('modal-estatus').value;
+  var subest = document.getElementById('modal-subest').value.trim();
+  var btn    = document.getElementById('btn-guardar');
+  btn.textContent = 'Guardando...';
+  btn.classList.add('guardando');
+
+  var url = URL_SCRIPT + '?accion=actualizar&fila=' + filaActual.fila +
+    '&hora=' + encodeURIComponent(hora) +
+    '&estatus=' + encodeURIComponent(estatus) +
+    '&subest=' + encodeURIComponent(subest);
+
+  fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if (res.ok) {
+        // Actualizar dato local
+        var idx = datos.findIndex(function(d){ return d.fila === filaActual.fila; });
+        if (idx >= 0) { datos[idx].hora=hora; datos[idx].estatus=estatus; datos[idx].subest=subest; }
+        cerrarModal();
+        filtrar();
+      } else {
+        alert('Error al guardar: ' + (res.msg||''));
+      }
+    })
+    .catch(function(){ alert('Error de conexión al guardar.'); })
+    .finally(function(){
+      btn.textContent = 'Guardar';
+      btn.classList.remove('guardando');
+    });
+}
+
+// Cerrar modal al tocar fuera
+document.getElementById('modal-overlay').addEventListener('click', function(e){
+  if (e.target === this) cerrarModal();
+});
 </script>
 </body>
 </html>
