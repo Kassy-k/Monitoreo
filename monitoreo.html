@@ -138,6 +138,20 @@
   <div class="stat s-no"><div class="val" id="s-no">—</div><div class="lbl">No entregado</div></div>
   <div class="stat s-par"><div class="val" id="s-par">—</div><div class="lbl">Parcial</div></div>
 </div>
+<!-- Modal contraseña -->
+<div class="modal-overlay" id="modal-pass-overlay">
+  <div class="modal">
+    <h3>🔐 Modo edición</h3>
+    <label>Contraseña</label>
+    <input type="password" id="input-pass" placeholder="Ingresa la contraseña" onkeydown="if(event.key==='Enter')verificarPass()">
+    <div id="pass-error" style="color:#e05a3a;font-size:12px;margin-top:8px;display:none;">Contraseña incorrecta</div>
+    <div class="modal-btns" style="margin-top:1rem;">
+      <button class="btn-cancelar" onclick="cerrarModalPass()">Cancelar</button>
+      <button class="btn-guardar" onclick="verificarPass()">Entrar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal edición -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
@@ -272,8 +286,10 @@ function filtrar() {
   if(!res.length){tabla.style.display='none';msg.style.display='block';msg.textContent='No se encontraron resultados.';return;}
   msg.style.display='none';
   tabla.style.display='table';
-  tbody.innerHTML=res.map(function(r){
-    return '<tr><td><span class="pedido-num">'+(r.pedido||'—')+'</span></td><td><span class="tienda-tag">'+(r.tienda||'—')+'</span></td><td style="color:var(--text3);font-size:12px;">'+fmtFecha(r.fecha)+'</td><td>'+(r.muni||'—')+'</td><td style="color:var(--text2);">'+(r.hora||'—')+'</td><td><span class="badge '+badgeCls(r.estatus)+'">'+(r.estatus||'—')+'</span></td><td style="color:var(--text2);font-size:12px;">'+(r.subest||'—')+'</td>'+(modoEdicion?'<td><button class="btn-edit-fila" onclick="abrirModal('+JSON.stringify(r)+')">✏️</button></td>':'<td style="display:none;"></td>')+'</tr>';
+  // Guardar referencia para edición
+  window._resActual = res;
+  tbody.innerHTML=res.map(function(r,i){
+    return '<tr><td><span class="pedido-num">'+(r.pedido||'—')+'</span></td><td><span class="tienda-tag">'+(r.tienda||'—')+'</span></td><td style="color:var(--text3);font-size:12px;">'+fmtFecha(r.fecha)+'</td><td>'+(r.muni||'—')+'</td><td style="color:var(--text2);">'+(r.hora||'—')+'</td><td><span class="badge '+badgeCls(r.estatus)+'">'+(r.estatus||'—')+'</span></td><td style="color:var(--text2);font-size:12px;">'+(r.subest||'—')+'</td>'+(modoEdicion?'<td><button class="btn-edit-fila" onclick="abrirModal('+i+')">✏️</button></td>':'<td style="display:none;"></td>')+'</tr>';
   }).join('');
 }
 
@@ -329,22 +345,42 @@ var filaActual = null;
 
 function toggleEdicion() {
   if (!modoEdicion) {
-    var pw = prompt('Contraseña:');
-    if (pw !== PASS) { alert('Contraseña incorrecta'); return; }
-    modoEdicion = true;
-    document.getElementById('btn-edicion').classList.add('activo');
-    document.getElementById('btn-edicion').textContent = '🔒 Salir de edición';
-    document.getElementById('col-editar').style.display = '';
+    document.getElementById('input-pass').value = '';
+    document.getElementById('pass-error').style.display = 'none';
+    document.getElementById('modal-pass-overlay').classList.add('visible');
+    setTimeout(function(){ document.getElementById('input-pass').focus(); }, 100);
   } else {
     modoEdicion = false;
     document.getElementById('btn-edicion').classList.remove('activo');
     document.getElementById('btn-edicion').textContent = '✏️ Editar';
     document.getElementById('col-editar').style.display = 'none';
+    filtrar();
   }
-  filtrar();
 }
 
-function abrirModal(r) {
+function verificarPass() {
+  var pw = document.getElementById('input-pass').value;
+  if (pw === PASS) {
+    document.getElementById('modal-pass-overlay').classList.remove('visible');
+    modoEdicion = true;
+    document.getElementById('btn-edicion').classList.add('activo');
+    document.getElementById('btn-edicion').textContent = '🔒 Salir de edición';
+    document.getElementById('col-editar').style.display = '';
+    filtrar();
+  } else {
+    document.getElementById('pass-error').style.display = 'block';
+    document.getElementById('input-pass').value = '';
+    document.getElementById('input-pass').focus();
+  }
+}
+
+function cerrarModalPass() {
+  document.getElementById('modal-pass-overlay').classList.remove('visible');
+}
+
+function abrirModal(i) {
+  var r = window._resActual[i];
+  if (!r) return;
   filaActual = r;
   document.getElementById('modal-pedido').textContent = r.pedido;
   document.getElementById('modal-hora').value = r.hora || '';
