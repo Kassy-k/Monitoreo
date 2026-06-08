@@ -49,7 +49,8 @@
   th{padding:9px 14px;text-align:left;font-weight:500;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;border-bottom:0.5px solid var(--border);white-space:nowrap;}
   td{padding:10px 14px;border-bottom:0.5px solid var(--border2);vertical-align:middle;color:var(--text);}
   tr:last-child td{border-bottom:none;}
-  tr:hover td{background:var(--surface2);}
+  tr.fila-clickable{cursor:pointer;}
+  tr.fila-clickable:hover td{background:var(--surface2);}
   .pedido-num{font-weight:500;font-size:13px;font-family:'SF Mono','Fira Code',monospace;letter-spacing:0.02em;}
   .badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap;}
   .b-ok{background:#e1f5ee;color:#085041;} .b-rej{background:#faece7;color:#712b13;} .b-rep{background:#faeeda;color:#633806;} .b-par{background:#eaf3de;color:#27500a;} .b-no{background:#fcebeb;color:#791f1f;} .b-def{background:var(--surface2);color:var(--text2);}
@@ -59,26 +60,55 @@
   @media(max-width:640px){
     header{padding:0.75rem 1rem;} .controles{padding:0.65rem 1rem;} .stats{padding:0.75rem 1rem;} .tabla-wrap{padding:0 0.75rem 2rem;} input[type="text"]{min-width:120px;}
   }
-  .btn-edit { height:34px; padding:0 12px; border:0.5px solid var(--border); border-radius:8px; background:var(--surface2); font-size:13px; cursor:pointer; color:var(--text2); transition:background 0.15s; }
-  .btn-edit:hover { background:var(--border); }
-  .btn-edit.activo { background:#e1f5ee; border-color:#0f6e56; color:#0f6e56; font-weight:500; }
-  [data-theme="dark"] .btn-edit.activo { background:#04342c; border-color:#5dcaa5; color:#5dcaa5; }
-  .btn-edit-fila { background:none; border:none; cursor:pointer; font-size:15px; padding:2px 6px; border-radius:6px; color:var(--text3); }
-  .btn-edit-fila:hover { background:var(--surface2); color:var(--accent); }
-  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; }
-  .modal-overlay.visible { display:flex; }
-  .modal { background:var(--surface); border-radius:16px; padding:1.5rem; width:90%; max-width:420px; box-shadow:0 8px 32px rgba(0,0,0,0.2); }
-  .modal h3 { font-size:15px; font-weight:500; margin-bottom:1rem; }
-  .modal .pedido-tag { font-family:monospace; background:var(--surface2); padding:3px 8px; border-radius:6px; font-size:13px; margin-bottom:1rem; display:inline-block; }
-  .modal label { display:block; font-size:12px; color:var(--text3); margin-bottom:4px; margin-top:12px; }
-  .modal input, .modal select { width:100%; height:36px; border:0.5px solid var(--border); border-radius:8px; padding:0 10px; font-size:14px; background:var(--surface2); color:var(--text); outline:none; }
-  .modal input:focus, .modal select:focus { border-color:var(--accent); }
-  .modal-btns { display:flex; gap:8px; margin-top:1.25rem; }
-  .modal-btns button { flex:1; height:38px; border-radius:8px; border:none; cursor:pointer; font-size:14px; font-weight:500; }
-  .btn-guardar { background:var(--accent); color:#fff; }
-  .btn-guardar:hover { opacity:0.88; }
-  .btn-cancelar { background:var(--surface2); color:var(--text2); border:0.5px solid var(--border) !important; }
-  .guardando { opacity:0.6; pointer-events:none; }
+
+  /* Botón editar */
+  .btn-edit{height:34px;padding:0 12px;border:0.5px solid var(--border);border-radius:8px;background:var(--surface2);font-size:13px;cursor:pointer;color:var(--text2);transition:background 0.15s;}
+  .btn-edit:hover{background:var(--border);}
+  .btn-edit.activo{background:#e1f5ee;border-color:#0f6e56;color:#0f6e56;font-weight:500;}
+  [data-theme="dark"] .btn-edit.activo{background:#04342c;border-color:#5dcaa5;color:#5dcaa5;}
+  .btn-edit-fila{background:none;border:none;cursor:pointer;font-size:15px;padding:2px 6px;border-radius:6px;color:var(--text3);}
+  .btn-edit-fila:hover{background:var(--surface2);color:var(--accent);}
+
+  /* Modales base */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;}
+  .modal-overlay.visible{display:flex;}
+  .modal{background:var(--surface);border-radius:16px;padding:1.5rem;width:90%;max-width:420px;box-shadow:0 8px 32px rgba(0,0,0,0.2);}
+  .modal h3{font-size:15px;font-weight:500;margin-bottom:1rem;}
+  .modal .pedido-tag{font-family:monospace;background:var(--surface2);padding:3px 8px;border-radius:6px;font-size:13px;margin-bottom:1rem;display:inline-block;}
+  .modal label{display:block;font-size:12px;color:var(--text3);margin-bottom:4px;margin-top:12px;}
+  .modal input,.modal select{width:100%;height:36px;border:0.5px solid var(--border);border-radius:8px;padding:0 10px;font-size:14px;background:var(--surface2);color:var(--text);outline:none;}
+  .modal input:focus,.modal select:focus{border-color:var(--accent);}
+  .modal-btns{display:flex;gap:8px;margin-top:1.25rem;}
+  .modal-btns button{flex:1;height:38px;border-radius:8px;border:none;cursor:pointer;font-size:14px;font-weight:500;}
+  .btn-guardar{background:var(--accent);color:#fff;}
+  .btn-guardar:hover{opacity:0.88;}
+  .btn-cancelar{background:var(--surface2);color:var(--text2);border:0.5px solid var(--border) !important;}
+  .guardando{opacity:0.6;pointer-events:none;}
+
+  /* Modal detalle pedido */
+  .modal-detalle{max-width:380px;}
+  .detalle-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.25rem;}
+  .detalle-pedido-num{font-family:'SF Mono','Fira Code',monospace;font-size:18px;font-weight:600;letter-spacing:0.02em;color:var(--text);}
+  .detalle-tienda{font-size:12px;color:var(--text3);margin-top:3px;}
+  .btn-cerrar-detalle{background:none;border:none;cursor:pointer;font-size:18px;color:var(--text3);padding:2px;line-height:1;}
+  .detalle-unidad-card{background:var(--surface2);border:0.5px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1rem;}
+  .unidad-tipo-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:0.03em;margin-bottom:10px;}
+  .tipo-isuzu{background:#e8f0fe;color:#1a56c4;}
+  .tipo-hino{background:#fce8e6;color:#c5221f;}
+  .tipo-nissan{background:#e6f4ea;color:#137333;}
+  .tipo-otro{background:var(--surface2);color:var(--text3);}
+  [data-theme="dark"] .tipo-isuzu{background:#1a2a4a;color:#7baaf7;}
+  [data-theme="dark"] .tipo-hino{background:#4a1a1a;color:#f28b82;}
+  [data-theme="dark"] .tipo-nissan{background:#1a3a1a;color:#81c995;}
+  .unidad-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .unidad-info-item .ui-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;}
+  .unidad-info-item .ui-val{font-size:14px;font-weight:500;color:var(--text);}
+  .ui-val.mono{font-family:'SF Mono','Fira Code',monospace;font-size:13px;}
+  .detalle-divider{height:0.5px;background:var(--border2);margin:0.75rem 0;}
+  .detalle-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;font-size:13px;}
+  .detalle-row .dr-label{color:var(--text3);}
+  .detalle-row .dr-val{color:var(--text);font-weight:500;text-align:right;}
+  .sin-unidad{text-align:center;padding:0.75rem;color:var(--text3);font-size:13px;}
 </style>
 </head>
 <body>
@@ -93,6 +123,7 @@
     <button class="btn-edit" id="btn-edicion" onclick="toggleEdicion()">✏️ Editar</button>
   </div>
 </header>
+
 <div class="controles">
   <input type="text" id="buscar" placeholder="Buscar pedido, municipio..." oninput="filtrar()">
   <select id="filtro-tienda" onchange="filtrar()">
@@ -130,6 +161,7 @@
   <div class="spacer"></div>
   <button class="btn" onclick="cargarDatos()">↻ Actualizar</button>
 </div>
+
 <div class="stats">
   <div class="stat s-total"><div class="val" id="s-total">—</div><div class="lbl">Total</div></div>
   <div class="stat s-ok"><div class="val" id="s-ok">—</div><div class="lbl">Entregado</div></div>
@@ -138,6 +170,7 @@
   <div class="stat s-no"><div class="val" id="s-no">—</div><div class="lbl">No entregado</div></div>
   <div class="stat s-par"><div class="val" id="s-par">—</div><div class="lbl">Parcial</div></div>
 </div>
+
 <!-- Modal contraseña -->
 <div class="modal-overlay" id="modal-pass-overlay">
   <div class="modal">
@@ -177,6 +210,61 @@
   </div>
 </div>
 
+<!-- Modal detalle unidad -->
+<div class="modal-overlay" id="modal-detalle-overlay">
+  <div class="modal modal-detalle">
+    <div class="detalle-header">
+      <div>
+        <div class="detalle-pedido-num" id="det-pedido"></div>
+        <div class="detalle-tienda" id="det-tienda"></div>
+      </div>
+      <button class="btn-cerrar-detalle" onclick="cerrarDetalle()">✕</button>
+    </div>
+
+    <!-- Card unidad -->
+    <div class="detalle-unidad-card" id="det-unidad-card">
+      <div id="det-tipo-badge"></div>
+      <div class="unidad-info-grid">
+        <div class="unidad-info-item">
+          <div class="ui-label">Unidad</div>
+          <div class="ui-val mono" id="det-unidad">—</div>
+        </div>
+        <div class="unidad-info-item">
+          <div class="ui-label">Placas</div>
+          <div class="ui-val mono" id="det-placas">—</div>
+        </div>
+        <div class="unidad-info-item" style="grid-column:1/-1">
+          <div class="ui-label">Operador</div>
+          <div class="ui-val" id="det-operador">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detalle-divider"></div>
+
+    <div class="detalle-row">
+      <span class="dr-label">Fecha</span>
+      <span class="dr-val" id="det-fecha">—</span>
+    </div>
+    <div class="detalle-row">
+      <span class="dr-label">Municipio</span>
+      <span class="dr-val" id="det-muni">—</span>
+    </div>
+    <div class="detalle-row">
+      <span class="dr-label">Hora</span>
+      <span class="dr-val" id="det-hora">—</span>
+    </div>
+    <div class="detalle-row">
+      <span class="dr-label">Estatus</span>
+      <span class="dr-val" id="det-estatus">—</span>
+    </div>
+    <div class="detalle-row" id="det-subest-row">
+      <span class="dr-label">Sub estatus</span>
+      <span class="dr-val" id="det-subest">—</span>
+    </div>
+  </div>
+</div>
+
 <div class="tabla-wrap">
   <div id="msg">Conectando...</div>
   <table id="tabla" style="display:none;">
@@ -189,9 +277,10 @@
     <tbody id="tbody"></tbody>
   </table>
 </div>
+
 <script>
 var URL_API = 'https://monitoreo.nr3551642.workers.dev/';
-var URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbxxxOBuYI9_t4jIdFo9pWAsdHDqk1D-VzmYjh5-TRyArP9MQDcOGPuZy21LIH3oU7ZA/exec';
+var URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbyJi8TaQ04W6x8klOgAjhLAeEtcXy39tXZYXENY-i3gCUgB8wIHFHJ1mBoQgWk07fEc/exec';
 var PASS = 'KasselMonitoreo';
 var modoEdicion = false;
 var datos = [];
@@ -257,6 +346,63 @@ function fmtFecha(f) {
   return f||'—';
 }
 
+function tipoUnidad(u) {
+  if (!u) return { label: '—', cls: 'tipo-otro' };
+  var p = u.toLowerCase().trim();
+  if (p.charAt(0) === 'i') return { label: 'Isuzu', cls: 'tipo-isuzu', emoji: '🚛' };
+  if (p.charAt(0) === 'h') return { label: 'Hino', cls: 'tipo-hino', emoji: '🚚' };
+  if (p.charAt(0) === 'n') return { label: 'Nissan', cls: 'tipo-nissan', emoji: '🚐' };
+  return { label: u.toUpperCase(), cls: 'tipo-otro', emoji: '🚗' };
+}
+
+function abrirDetalle(i) {
+  var r = window._resActual[i];
+  if (!r) return;
+
+  document.getElementById('det-pedido').textContent = r.pedido || '—';
+  document.getElementById('det-tienda').textContent = r.tienda || '—';
+  document.getElementById('det-fecha').textContent = fmtFecha(r.fecha);
+  document.getElementById('det-muni').textContent = r.muni || '—';
+  document.getElementById('det-hora').textContent = r.hora || '—';
+
+  // Estatus con badge
+  var estatusEl = document.getElementById('det-estatus');
+  estatusEl.innerHTML = '<span class="badge ' + badgeCls(r.estatus) + '">' + (r.estatus || '—') + '</span>';
+
+  // Sub estatus
+  var subRow = document.getElementById('det-subest-row');
+  if (r.subest && r.subest.trim()) {
+    document.getElementById('det-subest').textContent = r.subest;
+    subRow.style.display = 'flex';
+  } else {
+    subRow.style.display = 'none';
+  }
+
+  // Unidad
+  var unidad = (r.unidad || '').trim();
+  var operador = (r.operador || '').trim();
+  var placas = (r.placas || '').trim();
+
+  if (unidad || operador || placas) {
+    var tipo = tipoUnidad(unidad);
+    document.getElementById('det-tipo-badge').innerHTML =
+      '<span class="unidad-tipo-badge ' + tipo.cls + '">' + (tipo.emoji||'') + ' ' + tipo.label + '</span>';
+    document.getElementById('det-unidad').textContent = unidad ? unidad.toUpperCase() : '—';
+    document.getElementById('det-placas').textContent = placas || '—';
+    document.getElementById('det-operador').textContent = operador || '—';
+    document.getElementById('det-unidad-card').style.display = '';
+  } else {
+    document.getElementById('det-unidad-card').innerHTML = '<div class="sin-unidad">Sin información de unidad</div>';
+    document.getElementById('det-unidad-card').style.display = '';
+  }
+
+  document.getElementById('modal-detalle-overlay').classList.add('visible');
+}
+
+function cerrarDetalle() {
+  document.getElementById('modal-detalle-overlay').classList.remove('visible');
+}
+
 function filtrar() {
   var q=document.getElementById('buscar').value.toLowerCase();
   var tienda=document.getElementById('filtro-tienda').value;
@@ -286,22 +432,20 @@ function filtrar() {
   if(!res.length){tabla.style.display='none';msg.style.display='block';msg.textContent='No se encontraron resultados.';return;}
   msg.style.display='none';
   tabla.style.display='table';
-  // Guardar referencia para edición
   window._resActual = res;
   tbody.innerHTML=res.map(function(r,i){
-    return '<tr><td><span class="pedido-num">'+(r.pedido||'—')+'</span></td><td><span class="tienda-tag">'+(r.tienda||'—')+'</span></td><td style="color:var(--text3);font-size:12px;">'+fmtFecha(r.fecha)+'</td><td>'+(r.muni||'—')+'</td><td style="color:var(--text2);">'+(r.hora||'—')+'</td><td><span class="badge '+badgeCls(r.estatus)+'">'+(r.estatus||'—')+'</span></td><td style="color:var(--text2);font-size:12px;">'+(r.subest||'—')+'</td>'+(modoEdicion?'<td><button class="btn-edit-fila" onclick="abrirModal('+i+')">✏️</button></td>':'<td style="display:none;"></td>')+'</tr>';
+    var editBtn = modoEdicion ? '<td><button class="btn-edit-fila" onclick="event.stopPropagation();abrirModal('+i+')">✏️</button></td>' : '<td style="display:none;"></td>';
+    return '<tr class="fila-clickable" onclick="abrirDetalle('+i+')">' +
+      '<td><span class="pedido-num">'+(r.pedido||'—')+'</span></td>' +
+      '<td><span class="tienda-tag">'+(r.tienda||'—')+'</span></td>' +
+      '<td style="color:var(--text3);font-size:12px;">'+fmtFecha(r.fecha)+'</td>' +
+      '<td>'+(r.muni||'—')+'</td>' +
+      '<td style="color:var(--text2);">'+(r.hora||'—')+'</td>' +
+      '<td><span class="badge '+badgeCls(r.estatus)+'">'+(r.estatus||'—')+'</span></td>' +
+      '<td style="color:var(--text2);font-size:12px;">'+(r.subest||'—')+'</td>' +
+      editBtn +
+      '</tr>';
   }).join('');
-}
-
-function recibirDatos(raw) {
-  try {
-    datos=raw.filter(function(r){return r.pedido&&r.pedido.trim();}).map(function(r){r.tienda=tiendaDe(r.pedido);return r;});
-    filtrar();
-    document.getElementById('ultima-act').textContent='Actualizado '+new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
-  } catch(e) {
-    document.getElementById('msg').textContent='⚠️ Error al procesar datos.';
-    document.getElementById('ultima-act').textContent='Error';
-  }
 }
 
 function cargarDatos() {
@@ -412,7 +556,6 @@ function guardarCambios() {
     .then(function(r){ return r.json(); })
     .then(function(res){
       if (res.ok) {
-        // Actualizar dato local
         var idx = datos.findIndex(function(d){ return d.fila === filaActual.fila; });
         if (idx >= 0) { datos[idx].hora=hora; datos[idx].estatus=estatus; datos[idx].subest=subest; }
         cerrarModal();
@@ -428,10 +571,9 @@ function guardarCambios() {
     });
 }
 
-// Cerrar modal al tocar fuera
-document.getElementById('modal-overlay').addEventListener('click', function(e){
-  if (e.target === this) cerrarModal();
-});
+// Cerrar modales al tocar fuera
+document.getElementById('modal-overlay').addEventListener('click', function(e){ if(e.target===this) cerrarModal(); });
+document.getElementById('modal-detalle-overlay').addEventListener('click', function(e){ if(e.target===this) cerrarDetalle(); });
 </script>
 </body>
 </html>
