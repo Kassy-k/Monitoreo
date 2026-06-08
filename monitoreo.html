@@ -262,6 +262,22 @@
       <span class="dr-label">Sub estatus</span>
       <span class="dr-val" id="det-subest">—</span>
     </div>
+
+    <!-- Teléfono: solo STUDIO, solo modo edición -->
+    <div id="det-tel-row" style="display:none;margin-top:0.75rem;">
+      <div style="height:0.5px;background:var(--border2);margin-bottom:0.75rem;"></div>
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">📱 Teléfono operador</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="tel" id="det-tel-input" placeholder="10 dígitos"
+          style="flex:1;height:34px;border:0.5px solid var(--border);border-radius:8px;padding:0 10px;font-size:14px;background:var(--surface2);color:var(--text);outline:none;display:none;"
+          oninput="guardarTelefono(this.value)">
+        <span id="det-tel-texto" style="flex:1;font-size:14px;font-weight:500;color:var(--text);display:none;"></span>
+        <a id="det-tel-link" href="#" target="_blank"
+          style="height:34px;padding:0 12px;background:var(--accent-bg);border:0.5px solid var(--accent);border-radius:8px;color:var(--accent);font-size:13px;font-weight:500;text-decoration:none;display:none;align-items:center;white-space:nowrap;">
+          💬 WA
+        </a>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -396,7 +412,55 @@ function abrirDetalle(i) {
     document.getElementById('det-unidad-card').style.display = '';
   }
 
+  // Teléfono: solo STUDIO, visible para todos, editable solo en modo edición
+  var esStudio = (r.tienda === 'STUDIO');
+  var telRow = document.getElementById('det-tel-row');
+  if (esStudio) {
+    var operadorKey = 'tel_' + (r.operador || '').trim().toLowerCase().replace(/\s+/g,'_');
+    var telGuardado = '';
+    try { telGuardado = localStorage.getItem(operadorKey) || ''; } catch(e){}
+    var telInput = document.getElementById('det-tel-input');
+    var telTexto = document.getElementById('det-tel-texto');
+    var telLink = document.getElementById('det-tel-link');
+    telInput.dataset.key = operadorKey;
+
+    if (modoEdicion) {
+      // Editable
+      telInput.value = telGuardado;
+      telInput.style.display = 'block';
+      telTexto.style.display = 'none';
+    } else {
+      // Solo lectura
+      telInput.style.display = 'none';
+      telTexto.textContent = telGuardado || 'Sin número';
+      telTexto.style.display = 'block';
+    }
+
+    if (telGuardado) {
+      telLink.href = 'https://wa.me/52' + telGuardado.replace(/\D/g,'');
+      telLink.style.display = 'inline-flex';
+    } else {
+      telLink.style.display = 'none';
+    }
+    telRow.style.display = 'block';
+  } else {
+    telRow.style.display = 'none';
+  }
+
   document.getElementById('modal-detalle-overlay').classList.add('visible');
+}
+
+function guardarTelefono(val) {
+  var input = document.getElementById('det-tel-input');
+  var key = input.dataset.key;
+  var telLink = document.getElementById('det-tel-link');
+  try { localStorage.setItem(key, val); } catch(e){}
+  if (val && val.replace(/\D/g,'').length >= 10) {
+    telLink.href = 'https://wa.me/52' + val.replace(/\D/g,'');
+    telLink.style.display = 'inline-flex';
+  } else {
+    telLink.style.display = 'none';
+  }
 }
 
 function cerrarDetalle() {
