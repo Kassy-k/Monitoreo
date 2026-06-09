@@ -109,6 +109,22 @@
   .detalle-row .dr-label{color:var(--text3);}
   .detalle-row .dr-val{color:var(--text);font-weight:500;text-align:right;}
   .sin-unidad{text-align:center;padding:0.75rem;color:var(--text3);font-size:13px;}
+
+
+  /* Gauge mini en header */
+  .gauge-mini{position:relative;display:flex;align-items:center;justify-content:center;width:100px;height:54px;}
+  .gauge-mini-svg{width:100px;height:54px;}
+  .gauge-track{stroke:#e5e3db;}
+  [data-theme="dark"] .gauge-track{stroke:#3a3a35;}
+  .gauge-fill{stroke:url(#gaugeGrad);transition:stroke-dasharray 0.8s cubic-bezier(.4,0,.2,1);}
+  .gauge-needle-line{stroke:#1a1a18;transition:transform 0.8s cubic-bezier(.4,0,.2,1);}
+  [data-theme="dark"] .gauge-needle-line{stroke:#f0ede6;}
+  .gauge-needle-dot{fill:#0f6e56;}
+  [data-theme="dark"] .gauge-needle-dot{fill:#5dcaa5;}
+  .gauge-mini-center{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);text-align:center;pointer-events:none;white-space:nowrap;}
+  .gauge-mini-pct{font-size:13px;font-weight:700;letter-spacing:-0.01em;color:var(--text);line-height:1;}
+  .gauge-mini-lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;}
+  @media(max-width:640px){.gauge-mini{width:70px;height:38px;}.gauge-mini-svg{width:70px;height:38px;}.gauge-mini-pct{font-size:11px;}}
 </style>
 </head>
 <body>
@@ -118,6 +134,27 @@
     <h1>Monitoreo de Entregas</h1>
   </div>
   <div class="header-right">
+    <div class="gauge-mini" id="gauge-mini-wrap">
+      <svg viewBox="0 0 120 68" class="gauge-mini-svg">
+        <defs>
+          <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#f59e0b"/>
+            <stop offset="60%" stop-color="#10b981"/>
+            <stop offset="100%" stop-color="#0f6e56"/>
+          </linearGradient>
+        </defs>
+        <path d="M 12 58 A 48 48 0 0 1 108 58" fill="none" stroke-width="10" stroke-linecap="round" class="gauge-track"/>
+        <path id="gauge-arc" d="M 12 58 A 48 48 0 0 1 108 58" fill="none" stroke-width="10" stroke-linecap="round" class="gauge-fill" stroke-dasharray="0 150.8"/>
+        <g id="gauge-needle" transform="rotate(-90, 60, 58)">
+          <line x1="60" y1="58" x2="60" y2="16" stroke-width="2" stroke-linecap="round" class="gauge-needle-line"/>
+          <circle cx="60" cy="58" r="4" class="gauge-needle-dot"/>
+        </g>
+      </svg>
+      <div class="gauge-mini-center">
+        <div class="gauge-mini-pct" id="gauge-pct">—</div>
+        <div class="gauge-mini-lbl">avance</div>
+      </div>
+    </div>
     <span id="ultima-act">Cargando...</span>
     <button class="btn-theme" id="btn-tema" onclick="toggleTema()">🌙</button>
     <button class="btn-edit" id="btn-edicion" onclick="toggleEdicion()">✏️ Editar</button>
@@ -169,6 +206,32 @@
   <div class="stat s-rep"><div class="val" id="s-rep">—</div><div class="lbl">Reprogramado</div></div>
   <div class="stat s-no"><div class="val" id="s-no">—</div><div class="lbl">No entregado</div></div>
   <div class="stat s-par"><div class="val" id="s-par">—</div><div class="lbl">Parcial</div></div>
+</div>
+
+
+    <div class="gauge-wrap">
+      <svg viewBox="0 0 200 120" class="gauge-svg">
+        <defs>
+          <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#f59e0b"/>
+            <stop offset="50%" stop-color="#10b981"/>
+            <stop offset="100%" stop-color="#0f6e56"/>
+          </linearGradient>
+        </defs>
+        <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="16" stroke-linecap="round" class="gauge-track"/>
+        <path id="gauge-arc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="16" stroke-linecap="round" class="gauge-fill" stroke-dasharray="0 251.2"/>
+        <g id="gauge-needle" transform="rotate(-90, 100, 100)">
+          <line x1="100" y1="100" x2="100" y2="28" stroke-width="2.5" stroke-linecap="round" class="gauge-needle-line"/>
+          <circle cx="100" cy="100" r="5" class="gauge-needle-dot"/>
+        </g>
+      </svg>
+    </div>
+    <div class="gauge-labels">
+      <span>0%</span>
+      <span>50%</span>
+      <span>100%</span>
+    </div>
+  </div>
 </div>
 
 <!-- Modal contraseña -->
@@ -469,6 +532,27 @@ function cerrarDetalle() {
   document.getElementById('modal-detalle-overlay').classList.remove('visible');
 }
 
+
+function actualizarGauge(res) {
+  var total = res.length;
+  var finalizados = res.filter(function(r){
+    var e = (r.estatus||'').toLowerCase();
+    return e.indexOf('exitoso')>=0 || e==='entregado' || e.indexOf('rechazado')>=0 || e.indexOf('parcial')>=0;
+  }).length;
+  var pct = total > 0 ? Math.round((finalizados / total) * 100) : 0;
+
+  // Arc: total length of semicircle arc ~251.2
+  var arcLen = 150.8;
+  var fill = (pct / 100) * arcLen;
+  document.getElementById('gauge-arc').setAttribute('stroke-dasharray', fill + ' ' + arcLen);
+
+  // Needle: rotates from -90 (0%) to +90 (100%), pivot at (60,58)
+  var angle = -90 + (pct / 100) * 180;
+  document.getElementById('gauge-needle').setAttribute('transform', 'rotate(' + angle + ', 60, 58)');
+
+  document.getElementById('gauge-pct').textContent = pct + '%';
+}
+
 function filtrar() {
   var q=document.getElementById('buscar').value.toLowerCase();
   var tienda=document.getElementById('filtro-tienda').value;
@@ -492,6 +576,7 @@ function filtrar() {
   document.getElementById('s-rep').textContent=rep;
   document.getElementById('s-par').textContent=par;
   document.getElementById('s-no').textContent=no;
+  actualizarGauge(res);
   var msg=document.getElementById('msg');
   var tabla=document.getElementById('tabla');
   var tbody=document.getElementById('tbody');
