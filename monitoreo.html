@@ -520,8 +520,8 @@ function cerrarDetalle() {
 function actualizarGauge(res) {
   var total = res.length;
   var finalizados = res.filter(function(r){
-    var e = (r.estatus||'').toLowerCase();
-    return e.indexOf('exitoso')>=0 || e==='entregado' || e.indexOf('rechazado')>=0 || e.indexOf('parcial')>=0;
+    var e = (r.estatus||'').trim();
+    return e !== '' && e !== '—';
   }).length;
   var pct = total > 0 ? Math.round((finalizados / total) * 100) : 0;
 
