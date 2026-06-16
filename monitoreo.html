@@ -503,6 +503,16 @@ function cerrarDetalle() {
 
 
 
+
+function obsCell(pedido) {
+  var val = getObs(pedido);
+  if (modoEdicion) {
+    return '<td onclick="event.stopPropagation()"><input class="obs-input" type="text" placeholder="Agregar observación..." value="' + val.replace(/"/g, '&quot;') + '" onchange="saveObs('' + pedido + '', this.value)" maxlength="120"></td>';
+  } else {
+    return '<td><span class="obs-texto">' + (val || '<span style="color:var(--text3);font-size:11px;">—</span>') + '</span></td>';
+  }
+}
+
 function getObs(pedido) {
   try { return localStorage.getItem('obs_' + pedido) || ''; } catch(e) { return ''; }
 }
@@ -572,7 +582,7 @@ function filtrar() {
       '<td style="color:var(--text2);">'+(r.hora||'—')+'</td>' +
       '<td><span class="badge '+badgeCls(r.estatus)+'">'+(r.estatus||'—')+'</span></td>' +
       '<td style="color:var(--text2);font-size:12px;">'+(r.subest||'—')+'</td>' +
-      (modoEdicion ? '<td onclick="event.stopPropagation()"><input class="obs-input" type="text" placeholder="Agregar observación..." value="'+getObs(r.pedido).replace(/"/g,'&quot;')+'" onchange="saveObs(''+r.pedido+'',this.value)" maxlength="120"></td>' : '<td id="col-obs" style="display:none;"></td>') +
+      obsCell(r.pedido) +
       editBtn +
       '</tr>';
   }).join('');
