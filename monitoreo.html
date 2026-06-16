@@ -125,6 +125,13 @@
   .gauge-mini-pct{font-size:13px;font-weight:700;letter-spacing:-0.01em;color:var(--text);line-height:1;}
   .gauge-mini-lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;}
   @media(max-width:640px){.gauge-mini{width:70px;height:38px;}.gauge-mini-svg{width:70px;height:38px;}.gauge-mini-pct{font-size:11px;}}
+
+  /* Observaciones */
+  .obs-texto{font-size:12px;color:var(--text2);}
+
+  .obs-input{width:100%;min-width:160px;height:28px;border:0.5px solid var(--border);border-radius:6px;padding:0 8px;font-size:12px;background:var(--surface2);color:var(--text);outline:none;transition:border-color 0.15s;}
+  .obs-input:focus{border-color:var(--accent);}
+  .obs-input::placeholder{color:var(--text3);}
 </style>
 </head>
 <body>
@@ -332,7 +339,7 @@
   <table id="tabla" style="display:none;">
     <thead>
       <tr>
-        <th>Pedido</th><th>Tienda</th><th>Fecha</th><th>Municipio</th><th>Hora</th><th>Estatus</th><th>Sub estatus</th>
+        <th>Pedido</th><th>Tienda</th><th>Fecha</th><th>Municipio</th><th>Hora</th><th>Estatus</th><th>Sub estatus</th><th id="col-obs">Observaciones</th>
         <th id="col-editar" style="display:none;"></th>
       </tr>
     </thead>
@@ -495,6 +502,15 @@ function cerrarDetalle() {
 }
 
 
+
+function getObs(pedido) {
+  try { return localStorage.getItem('obs_' + pedido) || ''; } catch(e) { return ''; }
+}
+
+function saveObs(pedido, val) {
+  try { localStorage.setItem('obs_' + pedido, val); } catch(e) {}
+}
+
 function actualizarGauge(res) {
   var total = res.length;
   var finalizados = res.filter(function(r){
@@ -556,6 +572,7 @@ function filtrar() {
       '<td style="color:var(--text2);">'+(r.hora||'—')+'</td>' +
       '<td><span class="badge '+badgeCls(r.estatus)+'">'+(r.estatus||'—')+'</span></td>' +
       '<td style="color:var(--text2);font-size:12px;">'+(r.subest||'—')+'</td>' +
+      (modoEdicion ? '<td onclick="event.stopPropagation()"><input class="obs-input" type="text" placeholder="Agregar observación..." value="'+getObs(r.pedido).replace(/"/g,'&quot;')+'" onchange="saveObs(''+r.pedido+'',this.value)" maxlength="120"></td>' : '<td id="col-obs" style="display:none;"></td>') +
       editBtn +
       '</tr>';
   }).join('');
