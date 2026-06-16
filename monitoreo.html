@@ -496,6 +496,13 @@ function abrirDetalle(i) {
   document.getElementById('modal-detalle-overlay').classList.add('visible');
 }
 
+  if (val && val.replace(/\D/g,'').length >= 10) {
+    telLink.href = 'https://wa.me/52' + val.replace(/\D/g,'');
+    telLink.style.display = 'inline-flex';
+  } else {
+    telLink.style.display = 'none';
+  }
+}
 
 function cerrarDetalle() {
   document.getElementById('modal-detalle-overlay').classList.remove('visible');
