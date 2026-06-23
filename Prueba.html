@@ -536,21 +536,40 @@ function direccionTexto(r) {
   return partes.join(', ');
 }
 
+function direccionSimple(r) {
+  var partes = [r.colonia, r.municipioDir, 'México'].filter(function(x){return x && x.trim();});
+  return partes.join(', ');
+}
+
 var geocodeCache = {};
-function geocodificar(direccion) {
-  if (geocodeCache[direccion]) return Promise.resolve(geocodeCache[direccion]);
+function geocodificarUrl(direccion) {
   var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(direccion);
   return fetch(url, { headers: { 'Accept-Language': 'es' } })
     .then(function(r){ return r.json(); })
     .then(function(arr){
-      if (arr && arr[0]) {
-        var coords = { lat: parseFloat(arr[0].lat), lon: parseFloat(arr[0].lon) };
-        geocodeCache[direccion] = coords;
-        return coords;
-      }
+      if (arr && arr[0]) return { lat: parseFloat(arr[0].lat), lon: parseFloat(arr[0].lon) };
       return null;
     })
     .catch(function(){ return null; });
+}
+
+async function geocodificarRow(r) {
+  var full = direccionTexto(r);
+  if (geocodeCache[full]) return geocodeCache[full];
+
+  var coords = await geocodificarUrl(full);
+  if (!coords) {
+    // Fallback: intentar solo con colonia + municipio (más confiable)
+    var simple = direccionSimple(r);
+    if (simple && geocodeCache[simple]) { coords = geocodeCache[simple]; }
+    else if (simple) {
+      coords = await geocodificarUrl(simple);
+      if (coords) geocodeCache[simple] = coords;
+    }
+  } else {
+    geocodeCache[full] = coords;
+  }
+  return coords;
 }
 
 function tiempoViajeOSRM(origen, destino) {
@@ -625,14 +644,13 @@ async function calcularETAsPendientes() {
 
     try {
       // Geocodificar punto de partida: si hay un pedido anterior entregado, usar su dirección; si no, usar el primero de la ruta como referencia de origen
-      var puntoPartidaDir = siguienteIdx > 0 ? direccionTexto(pedidosUnidad[siguienteIdx-1]) : direccionTexto(pedidosUnidad[0]);
-      origenCoords = await geocodificar(puntoPartidaDir);
+      var puntoPartidaRow = siguienteIdx > 0 ? pedidosUnidad[siguienteIdx-1] : pedidosUnidad[0];
+      origenCoords = await geocodificarRow(puntoPartidaRow);
 
       acumMin = siguienteIdx > 0 ? 0 : 0; // tiempo desde la salida hasta el primer punto se ignora (offset simple)
 
       for (var j = siguienteIdx; j < pedidosUnidad.length; j++) {
-        var destDir = direccionTexto(pedidosUnidad[j]);
-        var destCoords = await geocodificar(destDir);
+        var destCoords = await geocodificarRow(pedidosUnidad[j]);
         if (!origenCoords || !destCoords) { 
           etaCache[unidad][pedidosUnidad[j].pedido] = null;
           continue;
@@ -659,7 +677,8 @@ function etaCell(r) {
 
   var estatus = (r.estatus||'').trim();
   if (estatus && estatus !== '—') {
-    return '<td><span class="eta-badge eta-calculado">' + estatus + '</span></td>';
+    var esOk = estatus.toLowerCase().indexOf('exitoso')>=0 || estatus.toLowerCase()==='entregado';
+    return '<td><span style="color:var(--text3);font-size:13px;">' + (esOk ? '✓' : '—') + '</span></td>';
   }
 
   if (!r.horaSalida) {
