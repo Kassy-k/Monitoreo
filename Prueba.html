@@ -35,6 +35,8 @@
   .btn{height:32px;padding:0 12px;border:0.5px solid var(--border);border-radius:7px;background:var(--surface2);font-size:13px;cursor:pointer;color:var(--text2);transition:background 0.15s,color 0.15s;white-space:nowrap;}
   .btn:hover{background:var(--border);color:var(--text);}
   .btn-primary{background:var(--accent-bg);border-color:var(--accent);color:var(--accent);font-weight:500;}
+  .btn-salida{height:32px;padding:0 14px;border:0.5px solid var(--accent);border-radius:7px;background:var(--accent-bg);color:var(--accent);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;display:none;}
+  .btn-salida:hover{opacity:0.85;}
   .spacer{flex:1;}
   .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;padding:1rem 1.5rem;}
   .stat{background:var(--surface);border:0.5px solid var(--border2);border-radius:10px;padding:0.85rem 1rem;}
@@ -61,7 +63,6 @@
     header{padding:0.75rem 1rem;} .controles{padding:0.65rem 1rem;} .stats{padding:0.75rem 1rem;} .tabla-wrap{padding:0 0.75rem 2rem;} input[type="text"]{min-width:120px;}
   }
 
-  /* Botón editar */
   .btn-edit{height:34px;padding:0 12px;border:0.5px solid var(--border);border-radius:8px;background:var(--surface2);font-size:13px;cursor:pointer;color:var(--text2);transition:background 0.15s;}
   .btn-edit:hover{background:var(--border);}
   .btn-edit.activo{background:#e1f5ee;border-color:#0f6e56;color:#0f6e56;font-weight:500;}
@@ -69,7 +70,6 @@
   .btn-edit-fila{background:none;border:none;cursor:pointer;font-size:15px;padding:2px 6px;border-radius:6px;color:var(--text3);}
   .btn-edit-fila:hover{background:var(--surface2);color:var(--accent);}
 
-  /* Modales base */
   .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;}
   .modal-overlay.visible{display:flex;}
   .modal{background:var(--surface);border-radius:16px;padding:1.5rem;width:90%;max-width:420px;box-shadow:0 8px 32px rgba(0,0,0,0.2);}
@@ -85,7 +85,6 @@
   .btn-cancelar{background:var(--surface2);color:var(--text2);border:0.5px solid var(--border) !important;}
   .guardando{opacity:0.6;pointer-events:none;}
 
-  /* Modal detalle pedido */
   .modal-detalle{max-width:380px;}
   .detalle-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.25rem;}
   .detalle-pedido-num{font-family:'SF Mono','Fira Code',monospace;font-size:18px;font-weight:600;letter-spacing:0.02em;color:var(--text);}
@@ -110,8 +109,21 @@
   .detalle-row .dr-val{color:var(--text);font-weight:500;text-align:right;}
   .sin-unidad{text-align:center;padding:0.75rem;color:var(--text3);font-size:13px;}
 
+  .obs-input{width:100%;min-width:160px;height:28px;border:0.5px solid var(--border);border-radius:6px;padding:0 8px;font-size:12px;background:var(--surface2);color:var(--text);outline:none;transition:border-color 0.15s;}
+  .obs-input:focus{border-color:var(--accent);}
+  .obs-input::placeholder{color:var(--text3);}
+  .obs-texto{font-size:12px;color:var(--text2);}
 
-  /* Gauge mini en header */
+  .orden-input{width:50px;height:28px;border:0.5px solid var(--border);border-radius:6px;padding:0 6px;font-size:12px;background:var(--surface2);color:var(--text);outline:none;text-align:center;}
+  .orden-input:focus{border-color:var(--accent);}
+
+  .eta-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap;}
+  .eta-pendiente{background:var(--surface2);color:var(--text3);}
+  .eta-siguiente{background:#faeeda;color:#633806;}
+  [data-theme="dark"] .eta-siguiente{background:#412402;color:#fac775;}
+  .eta-calculado{background:#e1f5ee;color:#085041;}
+  [data-theme="dark"] .eta-calculado{background:#04342c;color:#9fe1cb;}
+
   .gauge-mini{position:relative;display:flex;align-items:center;justify-content:center;width:100px;height:54px;}
   .gauge-mini-svg{width:100px;height:54px;}
   .gauge-track{stroke:#e5e3db;}
@@ -125,13 +137,6 @@
   .gauge-mini-pct{font-size:13px;font-weight:700;letter-spacing:-0.01em;color:var(--text);line-height:1;}
   .gauge-mini-lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;}
   @media(max-width:640px){.gauge-mini{width:70px;height:38px;}.gauge-mini-svg{width:70px;height:38px;}.gauge-mini-pct{font-size:11px;}}
-
-  /* Observaciones */
-  .obs-texto{font-size:12px;color:var(--text2);}
-
-  .obs-input{width:100%;min-width:160px;height:28px;border:0.5px solid var(--border);border-radius:6px;padding:0 8px;font-size:12px;background:var(--surface2);color:var(--text);outline:none;transition:border-color 0.15s;}
-  .obs-input:focus{border-color:var(--accent);}
-  .obs-input::placeholder{color:var(--text3);}
 </style>
 </head>
 <body>
@@ -141,6 +146,7 @@
     <h1>Monitoreo de Entregas</h1>
   </div>
   <div class="header-right">
+    <button class="btn-salida" id="btn-salida-ruta" onclick="abrirModalSalida()">🚦 Salir a ruta</button>
     <div class="gauge-mini" id="gauge-mini-wrap">
       <svg viewBox="0 0 120 68" class="gauge-mini-svg">
         <defs>
@@ -218,12 +224,6 @@
   <div class="stat s-par"><div class="val" id="s-par">—</div><div class="lbl">Parcial</div></div>
 </div>
 
-
-    <div class="gauge-wrap">
-    </div>
-  </div>
-</div>
-
 <!-- Modal contraseña -->
 <div class="modal-overlay" id="modal-pass-overlay">
   <div class="modal">
@@ -263,6 +263,21 @@
   </div>
 </div>
 
+<!-- Modal salida a ruta -->
+<div class="modal-overlay" id="modal-salida-overlay">
+  <div class="modal">
+    <h3>🚦 Registrar salida a ruta</h3>
+    <label>Unidad</label>
+    <select id="salida-unidad"></select>
+    <label>Hora de salida</label>
+    <input type="text" id="salida-hora" placeholder="ej. 09:15">
+    <div class="modal-btns">
+      <button class="btn-cancelar" onclick="cerrarModalSalida()">Cancelar</button>
+      <button class="btn-guardar" id="btn-guardar-salida" onclick="guardarSalida()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal detalle unidad -->
 <div class="modal-overlay" id="modal-detalle-overlay">
   <div class="modal modal-detalle">
@@ -274,7 +289,6 @@
       <button class="btn-cerrar-detalle" onclick="cerrarDetalle()">✕</button>
     </div>
 
-    <!-- Card unidad -->
     <div class="detalle-unidad-card" id="det-unidad-card">
       <div id="det-tipo-badge"></div>
       <div class="unidad-info-grid">
@@ -315,16 +329,20 @@
       <span class="dr-label">Sub estatus</span>
       <span class="dr-val" id="det-subest">—</span>
     </div>
+    <div class="detalle-row" id="det-orden-row">
+      <span class="dr-label">Orden de ruta</span>
+      <span class="dr-val" id="det-orden">—</span>
+    </div>
+    <div class="detalle-row" id="det-eta-row">
+      <span class="dr-label">Hora estimada</span>
+      <span class="dr-val" id="det-eta">—</span>
+    </div>
 
-    <!-- Teléfono: solo STUDIO, solo modo edición -->
     <div id="det-tel-row" style="display:none;margin-top:0.75rem;">
       <div style="height:0.5px;background:var(--border2);margin-bottom:0.75rem;"></div>
       <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">📱 Teléfono operador</div>
       <div style="display:flex;gap:8px;align-items:center;">
-        <input type="tel" id="det-tel-input" placeholder="10 dígitos"
-          style="flex:1;height:34px;border:0.5px solid var(--border);border-radius:8px;padding:0 10px;font-size:14px;background:var(--surface2);color:var(--text);outline:none;display:none;"
-          >
-        <span id="det-tel-texto" style="flex:1;font-size:14px;font-weight:500;color:var(--text);display:none;"></span>
+        <span id="det-tel-texto" style="flex:1;font-size:14px;font-weight:500;color:var(--text);"></span>
         <a id="det-tel-link" href="#" target="_blank"
           style="height:34px;padding:0 12px;background:var(--accent-bg);border:0.5px solid var(--accent);border-radius:8px;color:var(--accent);font-size:13px;font-weight:500;text-decoration:none;display:none;align-items:center;white-space:nowrap;">
           💬 WA
@@ -339,7 +357,8 @@
   <table id="tabla" style="display:none;">
     <thead>
       <tr>
-        <th>Pedido</th><th>Tienda</th><th>Fecha</th><th>Municipio</th><th>Hora</th><th>Estatus</th><th>Sub estatus</th><th id="col-obs">Observaciones</th>
+        <th id="th-orden" style="display:none;">Orden</th>
+        <th>Pedido</th><th>Tienda</th><th>Fecha</th><th>Estimado</th><th>Hora</th><th>Estatus</th><th>Sub estatus</th><th id="col-obs">Observaciones</th>
         <th id="col-editar" style="display:none;"></th>
       </tr>
     </thead>
@@ -349,10 +368,12 @@
 
 <script>
 var URL_API = 'https://monitoreo.nr3551642.workers.dev/';
-var URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbxHrD0Mru67bfA7zgBb_aTWd21gvnF1addCui_qJFaxXeRVJFwDrGgHLH4eDNQMFUk/exec';
+var URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbxqJTWIKaBETtgMBccsVIMnJ6cDPg_E2IpzfBIG0JKsgRacfhJbgTAbzWKeAhc9oWto/exec';
 var PASS = 'KasselMonitoreo';
 var modoEdicion = false;
 var datos = [];
+var etaCache = {}; // unidad -> {pedido: 'HH:MM AM/PM'}
+var etaCalculando = {}; // unidad -> bool
 
 var TIENDAS = {
   'DECOSFE':'SANTA FE','DECOINT':'INTERLOMAS','DECOZAR':'ZARAGOZA',
@@ -427,6 +448,233 @@ function tipoUnidad(u) {
   return { label: u.toUpperCase(), cls: 'tipo-otro', emoji: '🚗' };
 }
 
+function getObs(pedido) {
+  try { return localStorage.getItem('obs_' + pedido) || ''; } catch(e) { return ''; }
+}
+
+function saveObs(pedido, val) {
+  try { localStorage.setItem('obs_' + pedido, val); } catch(e) {}
+}
+
+function obsCell(pedido) {
+  var val = getObs(pedido);
+  if (modoEdicion) {
+    var safe = val.replace(/"/g, '&quot;');
+    return '<td onclick="event.stopPropagation()"><input class="obs-input" type="text" placeholder="Agregar observación..." value="' + safe + '" onchange="saveObs(this.dataset.pid, this.value)" data-pid="' + pedido + '" maxlength="120"></td>';
+  } else {
+    var display = val ? ('<span class="obs-texto">' + val + '</span>') : '<span style="color:var(--text3);font-size:11px;">—</span>';
+    return '<td>' + display + '</td>';
+  }
+}
+
+// ============ ORDEN DE RUTA ============
+function ordenCell(r, idx) {
+  if (modoEdicion) {
+    return '<td onclick="event.stopPropagation()"><input class="orden-input" type="text" value="' + (r.orden||'') + '" onchange="guardarOrden(' + r.fila + ', this.value)" maxlength="6"></td>';
+  }
+  return '<td style="display:none;"></td>';
+}
+
+function guardarOrden(fila, valor) {
+  var url = URL_SCRIPT + '?accion=orden&fila=' + fila + '&orden=' + encodeURIComponent(valor.trim());
+  fetch(url).then(function(r){return r.json();}).then(function(res){
+    if (res.ok) {
+      var idx = datos.findIndex(function(d){return d.fila===fila;});
+      if (idx>=0) datos[idx].orden = valor.trim();
+      filtrar();
+    }
+  }).catch(function(){});
+}
+
+// ============ SALIDA A RUTA ============
+function unidadesDisponibles() {
+  var set = {};
+  datos.forEach(function(r){ if(r.unidad) set[r.unidad]=true; });
+  return Object.keys(set).sort();
+}
+
+function abrirModalSalida() {
+  var sel = document.getElementById('salida-unidad');
+  var unidades = unidadesDisponibles();
+  sel.innerHTML = unidades.map(function(u){return '<option value="'+u+'">'+u.toUpperCase()+'</option>';}).join('');
+  document.getElementById('salida-hora').value = new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false});
+  document.getElementById('modal-salida-overlay').classList.add('visible');
+}
+
+function cerrarModalSalida() {
+  document.getElementById('modal-salida-overlay').classList.remove('visible');
+}
+
+function guardarSalida() {
+  var unidad = document.getElementById('salida-unidad').value;
+  var hora = document.getElementById('salida-hora').value.trim();
+  if (!unidad || !hora) return;
+  var btn = document.getElementById('btn-guardar-salida');
+  btn.textContent = 'Guardando...';
+  btn.classList.add('guardando');
+
+  var fecha = document.getElementById('filtro-fecha').value || hoy();
+  var url = URL_SCRIPT + '?accion=salida&unidad=' + encodeURIComponent(unidad) + '&fecha=' + fecha + '&hora=' + encodeURIComponent(hora);
+
+  fetch(url).then(function(r){return r.json();}).then(function(res){
+    if (res.ok) {
+      datos.forEach(function(d){ if(d.unidad===unidad) d.horaSalida = hora; });
+      delete etaCache[unidad];
+      cerrarModalSalida();
+      filtrar();
+      calcularETAsPendientes();
+    } else {
+      alert('Error al guardar salida.');
+    }
+  }).catch(function(){ alert('Error de conexión.'); })
+  .finally(function(){ btn.textContent='Confirmar'; btn.classList.remove('guardando'); });
+}
+
+// ============ CÁLCULO DE ETAs CON OSRM ============
+function direccionTexto(r) {
+  var partes = [r.calle, r.colonia, r.cp, r.municipioDir, 'México'].filter(function(x){return x && x.trim();});
+  return partes.join(', ');
+}
+
+var geocodeCache = {};
+function geocodificar(direccion) {
+  if (geocodeCache[direccion]) return Promise.resolve(geocodeCache[direccion]);
+  var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(direccion);
+  return fetch(url, { headers: { 'Accept-Language': 'es' } })
+    .then(function(r){ return r.json(); })
+    .then(function(arr){
+      if (arr && arr[0]) {
+        var coords = { lat: parseFloat(arr[0].lat), lon: parseFloat(arr[0].lon) };
+        geocodeCache[direccion] = coords;
+        return coords;
+      }
+      return null;
+    })
+    .catch(function(){ return null; });
+}
+
+function tiempoViajeOSRM(origen, destino) {
+  var url = 'https://router.project-osrm.org/route/v1/driving/' + origen.lon + ',' + origen.lat + ';' + destino.lon + ',' + destino.lat + '?overview=false';
+  return fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if (data && data.routes && data.routes[0]) {
+        return data.routes[0].duration; // segundos
+      }
+      return null;
+    })
+    .catch(function(){ return null; });
+}
+
+function parseHoraAMin(hora) {
+  if (!hora) return null;
+  var h = hora.trim().toLowerCase();
+  var m = h.match(/(\d{1,2}):(\d{2})\s*(am|pm)?/);
+  if (!m) return null;
+  var hh = parseInt(m[1]), mm = parseInt(m[2]);
+  if (m[3] === 'pm' && hh < 12) hh += 12;
+  if (m[3] === 'am' && hh === 12) hh = 0;
+  return hh*60+mm;
+}
+
+function minAHora(min) {
+  min = ((min % 1440) + 1440) % 1440;
+  var hh = Math.floor(min/60), mm = Math.round(min%60);
+  var ampm = hh>=12 ? 'PM':'AM';
+  var hh12 = hh%12; if(hh12===0) hh12=12;
+  return hh12 + ':' + String(mm).padStart(2,'0') + ' ' + ampm;
+}
+
+async function calcularETAsPendientes() {
+  var porUnidad = {};
+  datos.forEach(function(r){
+    if (!r.unidad || !r.horaSalida) return;
+    if (!porUnidad[r.unidad]) porUnidad[r.unidad] = [];
+    porUnidad[r.unidad].push(r);
+  });
+
+  for (var unidad in porUnidad) {
+    if (etaCalculando[unidad]) continue;
+    etaCalculando[unidad] = true;
+
+    var pedidosUnidad = porUnidad[unidad].filter(function(r){ return r.orden && !isNaN(parseInt(r.orden)); });
+    pedidosUnidad.sort(function(a,b){ return parseInt(a.orden) - parseInt(b.orden); });
+
+    if (!pedidosUnidad.length) { etaCalculando[unidad]=false; continue; }
+
+    if (!etaCache[unidad]) etaCache[unidad] = {};
+
+    // Encontrar el siguiente pedido sin estatus (el primero pendiente en orden)
+    var siguienteIdx = -1;
+    for (var i=0;i<pedidosUnidad.length;i++) {
+      var e = (pedidosUnidad[i].estatus||'').trim();
+      if (!e || e === '—') { siguienteIdx = i; break; }
+    }
+    if (siguienteIdx === -1) { etaCalculando[unidad]=false; continue; }
+
+    // Punto de partida: hora de salida, posición = primer pedido (o la unidad misma si no hay anterior con dirección)
+    var horaBaseMin = parseHoraAMin(pedidosUnidad[0].horaSalida);
+    if (horaBaseMin === null) { etaCalculando[unidad]=false; continue; }
+
+    var origenCoords = null;
+    var acumMin = 0;
+
+    // Si hay pedidos anteriores ya con estatus, partimos del último de ellos
+    var startFrom = 0;
+    if (siguienteIdx > 0) startFrom = siguienteIdx; // ya tenemos su tiempo acumulado en cache si se calculó antes
+
+    try {
+      // Geocodificar punto de partida: si hay un pedido anterior entregado, usar su dirección; si no, usar el primero de la ruta como referencia de origen
+      var puntoPartidaDir = siguienteIdx > 0 ? direccionTexto(pedidosUnidad[siguienteIdx-1]) : direccionTexto(pedidosUnidad[0]);
+      origenCoords = await geocodificar(puntoPartidaDir);
+
+      acumMin = siguienteIdx > 0 ? 0 : 0; // tiempo desde la salida hasta el primer punto se ignora (offset simple)
+
+      for (var j = siguienteIdx; j < pedidosUnidad.length; j++) {
+        var destDir = direccionTexto(pedidosUnidad[j]);
+        var destCoords = await geocodificar(destDir);
+        if (!origenCoords || !destCoords) { 
+          etaCache[unidad][pedidosUnidad[j].pedido] = null;
+          continue;
+        }
+        var segs = await tiempoViajeOSRM(origenCoords, destCoords);
+        if (segs === null) {
+          etaCache[unidad][pedidosUnidad[j].pedido] = null;
+        } else {
+          acumMin += segs/60;
+          var etaMin = horaBaseMin + acumMin;
+          etaCache[unidad][pedidosUnidad[j].pedido] = minAHora(etaMin);
+        }
+        origenCoords = destCoords;
+      }
+    } catch(e) {}
+
+    etaCalculando[unidad] = false;
+    filtrar();
+  }
+}
+
+function etaCell(r) {
+  if (!r.unidad) return '<td><span class="eta-badge eta-pendiente">—</span></td>';
+
+  var estatus = (r.estatus||'').trim();
+  if (estatus && estatus !== '—') {
+    return '<td><span class="eta-badge eta-calculado">' + estatus + '</span></td>';
+  }
+
+  if (!r.horaSalida) {
+    return '<td><span class="eta-badge eta-pendiente">Sin iniciar</span></td>';
+  }
+
+  var cache = etaCache[r.unidad];
+  if (cache && cache[r.pedido]) {
+    return '<td><span class="eta-badge eta-calculado">🕐 ' + cache[r.pedido] + '</span></td>';
+  } else if (cache && cache[r.pedido] === null) {
+    return '<td><span class="eta-badge eta-pendiente">N/D</span></td>';
+  }
+  return '<td><span class="eta-badge eta-siguiente">Calculando...</span></td>';
+}
+
 function abrirDetalle(i) {
   var r = window._resActual[i];
   if (!r) return;
@@ -434,14 +682,12 @@ function abrirDetalle(i) {
   document.getElementById('det-pedido').textContent = r.pedido || '—';
   document.getElementById('det-tienda').textContent = r.tienda || '—';
   document.getElementById('det-fecha').textContent = fmtFecha(r.fecha);
-  document.getElementById('det-muni').textContent = r.muni || '—';
+  document.getElementById('det-muni').textContent = r.municipioDir || r.muni || '—';
   document.getElementById('det-hora').textContent = r.hora || '—';
 
-  // Estatus con badge
   var estatusEl = document.getElementById('det-estatus');
   estatusEl.innerHTML = '<span class="badge ' + badgeCls(r.estatus) + '">' + (r.estatus || '—') + '</span>';
 
-  // Sub estatus
   var subRow = document.getElementById('det-subest-row');
   if (r.subest && r.subest.trim()) {
     document.getElementById('det-subest').textContent = r.subest;
@@ -450,7 +696,25 @@ function abrirDetalle(i) {
     subRow.style.display = 'none';
   }
 
-  // Unidad
+  // Orden de ruta: solo modo edición
+  var ordenRow = document.getElementById('det-orden-row');
+  if (modoEdicion) {
+    document.getElementById('det-orden').textContent = r.orden || '—';
+    ordenRow.style.display = 'flex';
+  } else {
+    ordenRow.style.display = 'none';
+  }
+
+  // ETA
+  var etaRow = document.getElementById('det-eta-row');
+  var cache = etaCache[r.unidad];
+  if (cache && cache[r.pedido]) {
+    document.getElementById('det-eta').textContent = cache[r.pedido];
+    etaRow.style.display = 'flex';
+  } else {
+    etaRow.style.display = 'none';
+  }
+
   var unidad = (r.unidad || '').trim();
   var operador = (r.operador || '').trim();
   var placas = (r.placas || '').trim();
@@ -468,20 +732,13 @@ function abrirDetalle(i) {
     document.getElementById('det-unidad-card').style.display = '';
   }
 
-  // Teléfono: solo STUDIO, visible para todos, editable solo en modo edición
   var esStudio = (r.tienda === 'STUDIO');
   var telRow = document.getElementById('det-tel-row');
   if (esStudio) {
     var telGuardado = (r.tel || '').trim();
-    var telInput = document.getElementById('det-tel-input');
     var telTexto = document.getElementById('det-tel-texto');
     var telLink = document.getElementById('det-tel-link');
-
-    // Siempre solo lectura (el número viene del Sheet)
-    telInput.style.display = 'none';
     telTexto.textContent = telGuardado || 'Sin número';
-    telTexto.style.display = 'block';
-
     if (telGuardado) {
       telLink.href = 'https://wa.me/52' + telGuardado.replace(/\D/g,'');
       telLink.style.display = 'inline-flex';
@@ -496,31 +753,8 @@ function abrirDetalle(i) {
   document.getElementById('modal-detalle-overlay').classList.add('visible');
 }
 
-
 function cerrarDetalle() {
   document.getElementById('modal-detalle-overlay').classList.remove('visible');
-}
-
-
-
-
-function obsCell(pedido) {
-  var val = getObs(pedido);
-  if (modoEdicion) {
-    var safe = val.replace(/"/g, '&quot;');
-    return '<td onclick="event.stopPropagation()"><input class="obs-input" type="text" placeholder="Agregar observación..." value="' + safe + '" onchange="saveObs(this.dataset.pid, this.value)" data-pid="' + pedido + '" maxlength="120"></td>';
-  } else {
-    var display = val ? ('<span class="obs-texto">' + val + '</span>') : '<span style="color:var(--text3);font-size:11px;">—</span>';
-    return '<td>' + display + '</td>';
-  }
-}
-
-function getObs(pedido) {
-  try { return localStorage.getItem('obs_' + pedido) || ''; } catch(e) { return ''; }
-}
-
-function saveObs(pedido, val) {
-  try { localStorage.setItem('obs_' + pedido, val); } catch(e) {}
 }
 
 function actualizarGauge(res) {
@@ -531,12 +765,10 @@ function actualizarGauge(res) {
   }).length;
   var pct = total > 0 ? Math.round((finalizados / total) * 100) : 0;
 
-  // Arc: total length of semicircle arc ~251.2
   var arcLen = 150.8;
   var fill = (pct / 100) * arcLen;
   document.getElementById('gauge-arc').setAttribute('stroke-dasharray', fill + ' ' + arcLen);
 
-  // Needle: rotates from -90 (0%) to +90 (100%), pivot at (60,58)
   var angle = -90 + (pct / 100) * 180;
   document.getElementById('gauge-needle').setAttribute('transform', 'rotate(' + angle + ', 60, 58)');
 
@@ -570,6 +802,7 @@ function filtrar() {
   var msg=document.getElementById('msg');
   var tabla=document.getElementById('tabla');
   var tbody=document.getElementById('tbody');
+  document.getElementById('th-orden').style.display = modoEdicion ? '' : 'none';
   if(!res.length){tabla.style.display='none';msg.style.display='block';msg.textContent='No se encontraron resultados.';return;}
   msg.style.display='none';
   tabla.style.display='table';
@@ -577,10 +810,11 @@ function filtrar() {
   tbody.innerHTML=res.map(function(r,i){
     var editBtn = modoEdicion ? '<td><button class="btn-edit-fila" onclick="event.stopPropagation();abrirModal('+i+')">✏️</button></td>' : '<td style="display:none;"></td>';
     return '<tr class="fila-clickable" onclick="abrirDetalle('+i+')">' +
+      ordenCell(r, i) +
       '<td><span class="pedido-num">'+(r.pedido||'—')+'</span></td>' +
       '<td><span class="tienda-tag">'+(r.tienda||'—')+'</span></td>' +
       '<td style="color:var(--text3);font-size:12px;">'+fmtFecha(r.fecha)+'</td>' +
-      '<td>'+(r.muni||'—')+'</td>' +
+      etaCell(r) +
       '<td style="color:var(--text2);">'+(r.hora||'—')+'</td>' +
       '<td><span class="badge '+badgeCls(r.estatus)+'">'+(r.estatus||'—')+'</span></td>' +
       '<td style="color:var(--text2);font-size:12px;">'+(r.subest||'—')+'</td>' +
@@ -601,6 +835,7 @@ function cargarDatos() {
       datos=raw.filter(function(r){return r.pedido&&r.pedido.trim();}).map(function(r){r.tienda=tiendaDe(r.pedido);return r;});
       filtrar();
       document.getElementById('ultima-act').textContent='Actualizado '+new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+      calcularETAsPendientes();
     })
     .catch(function(){
       document.getElementById('msg').textContent='⚠️ No se pudo conectar.';
@@ -640,6 +875,7 @@ function toggleEdicion() {
     document.getElementById('btn-edicion').classList.remove('activo');
     document.getElementById('btn-edicion').textContent = '✏️ Editar';
     document.getElementById('col-editar').style.display = 'none';
+    document.getElementById('btn-salida-ruta').style.display = 'none';
     filtrar();
   }
 }
@@ -652,6 +888,7 @@ function verificarPass() {
     document.getElementById('btn-edicion').classList.add('activo');
     document.getElementById('btn-edicion').textContent = '🔒 Salir de edición';
     document.getElementById('col-editar').style.display = '';
+    document.getElementById('btn-salida-ruta').style.display = 'inline-flex';
     filtrar();
   } else {
     document.getElementById('pass-error').style.display = 'block';
@@ -702,6 +939,7 @@ function guardarCambios() {
         if (idx >= 0) { datos[idx].hora=hora; datos[idx].estatus=estatus; datos[idx].subest=subest; }
         cerrarModal();
         filtrar();
+        calcularETAsPendientes();
       } else {
         alert('Error al guardar: ' + (res.msg||''));
       }
@@ -713,9 +951,10 @@ function guardarCambios() {
     });
 }
 
-// Cerrar modales al tocar fuera
 document.getElementById('modal-overlay').addEventListener('click', function(e){ if(e.target===this) cerrarModal(); });
 document.getElementById('modal-detalle-overlay').addEventListener('click', function(e){ if(e.target===this) cerrarDetalle(); });
+document.getElementById('modal-salida-overlay').addEventListener('click', function(e){ if(e.target===this) cerrarModalSalida(); });
+document.getElementById('modal-pass-overlay').addEventListener('click', function(e){ if(e.target===this) cerrarModalPass(); });
 </script>
 </body>
 </html>
