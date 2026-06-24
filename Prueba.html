@@ -615,11 +615,14 @@ var ALMACEN_DIR = 'Av. 1 de Mayo 86, Centro Industrial Tlalnepantla, 54030 Tlaln
 var almacenCoords = null;
 
 async function calcularETAsPendientes(unidadForzada) {
+  console.log('[ETA] calcularETAsPendientes llamado, forzada=', unidadForzada);
   if (!almacenCoords) {
     almacenCoords = await geocodificarUrl(ALMACEN_DIR);
+    console.log('[ETA] almacenCoords=', almacenCoords);
   }
 
   var fechaActiva = document.getElementById('filtro-fecha').value || hoy();
+  console.log('[ETA] fechaActiva=', fechaActiva);
 
   var porUnidad = {};
   datos.forEach(function(r){
@@ -628,16 +631,19 @@ async function calcularETAsPendientes(unidadForzada) {
     if (!porUnidad[r.unidad]) porUnidad[r.unidad] = [];
     porUnidad[r.unidad].push(r);
   });
+  console.log('[ETA] porUnidad=', porUnidad);
 
   for (var unidad in porUnidad) {
     var esForzado = (unidadForzada && unidad === unidadForzada);
-    if (etaCalculando[unidad] && !esForzado) continue;
+    console.log('[ETA] procesando unidad=', unidad, 'esForzado=', esForzado, 'etaCalculando=', etaCalculando[unidad]);
+    if (etaCalculando[unidad] && !esForzado) { console.log('[ETA] saltando, ya calculando'); continue; }
     etaCalculando[unidad] = true;
 
     var pedidosUnidad = porUnidad[unidad].filter(function(r){ return r.orden && !isNaN(parseInt(r.orden)); });
     pedidosUnidad.sort(function(a,b){ return parseInt(a.orden) - parseInt(b.orden); });
+    console.log('[ETA] pedidosUnidad ordenados=', pedidosUnidad.map(function(r){return r.pedido+'(orden:'+r.orden+',estatus:'+r.estatus+')';}));
 
-    if (!pedidosUnidad.length) { etaCalculando[unidad]=false; continue; }
+    if (!pedidosUnidad.length) { console.log('[ETA] sin pedidos con orden válido'); etaCalculando[unidad]=false; continue; }
 
     // Reiniciar cache de esta unidad en cada recálculo (evita arrastrar horas viejas)
     etaCache[unidad] = {};
@@ -648,10 +654,12 @@ async function calcularETAsPendientes(unidadForzada) {
       var e = (pedidosUnidad[i].estatus||'').trim();
       if (!e || e === '—') { siguienteIdx = i; break; }
     }
-    if (siguienteIdx === -1) { etaCalculando[unidad]=false; continue; }
+    console.log('[ETA] siguienteIdx=', siguienteIdx);
+    if (siguienteIdx === -1) { console.log('[ETA] todos los pedidos ya tienen estatus'); etaCalculando[unidad]=false; continue; }
 
     var horaSalidaMin = parseHoraAMin(pedidosUnidad[0].horaSalida);
-    if (horaSalidaMin === null) { etaCalculando[unidad]=false; continue; }
+    console.log('[ETA] horaSalida raw=', pedidosUnidad[0].horaSalida, 'parseado=', horaSalidaMin);
+    if (horaSalidaMin === null) { console.log('[ETA] no se pudo parsear horaSalida'); etaCalculando[unidad]=false; continue; }
 
     // Hora base: la hora REAL del último pedido entregado (si existe y es posterior a la salida),
     // o la hora de salida del almacén si todavía no se ha entregado ninguno.
@@ -661,17 +669,20 @@ async function calcularETAsPendientes(unidadForzada) {
     if (siguienteIdx > 0 && pedidosUnidad[siguienteIdx-1].hora) {
       var anterior = pedidosUnidad[siguienteIdx - 1];
       var horaAnteriorMin = parseHoraAMin(anterior.hora);
+      console.log('[ETA] pedido anterior=', anterior.pedido, 'hora raw=', anterior.hora, 'parseado=', horaAnteriorMin);
       // Solo confiar en esta hora si es posterior (o igual) a la hora de salida del día
       if (horaAnteriorMin !== null && horaAnteriorMin >= horaSalidaMin) {
         horaBaseMin = horaAnteriorMin;
         origenCoords = await geocodificarRow(anterior);
+        console.log('[ETA] origenCoords desde pedido anterior=', origenCoords);
       }
     }
     if (horaBaseMin === null) {
       horaBaseMin = horaSalidaMin;
       origenCoords = almacenCoords;
+      console.log('[ETA] usando almacén como origen, coords=', origenCoords);
     }
-    if (horaBaseMin === null) { etaCalculando[unidad]=false; continue; }
+    if (horaBaseMin === null) { console.log('[ETA] horaBaseMin null, abortando'); etaCalculando[unidad]=false; continue; }
 
     try {
       var acumMinBase = 0; // sin margen (optimista)
@@ -679,13 +690,17 @@ async function calcularETAsPendientes(unidadForzada) {
       var MIN_POR_PARADA = 15;
 
       for (var j = siguienteIdx; j < pedidosUnidad.length; j++) {
+        console.log('[ETA] calculando para pedido=', pedidosUnidad[j].pedido);
         var destCoords = await geocodificarRow(pedidosUnidad[j]);
+        console.log('[ETA] destCoords=', destCoords);
         if (!origenCoords || !destCoords) {
+          console.log('[ETA] sin coords origen/destino, marcando null');
           etaCache[unidad][pedidosUnidad[j].pedido] = null;
           origenCoords = destCoords || origenCoords;
           continue;
         }
         var segs = await tiempoViajeOSRM(origenCoords, destCoords);
+        console.log('[ETA] OSRM segundos=', segs);
         if (segs === null) {
           etaCache[unidad][pedidosUnidad[j].pedido] = null;
         } else {
@@ -698,17 +713,19 @@ async function calcularETAsPendientes(unidadForzada) {
 
           // Sanity check: si el estimado pasa de 14h desde la base, algo salió mal
           if (etaMinConMargen - horaBaseMin > 14*60) {
+            console.log('[ETA] sanity check falló, descartando');
             etaCache[unidad][pedidosUnidad[j].pedido] = null;
           } else {
             etaCache[unidad][pedidosUnidad[j].pedido] = {
               desde: minAHora(etaMinOptimista),
               hasta: minAHora(etaMinConMargen)
             };
+            console.log('[ETA] resultado para', pedidosUnidad[j].pedido, '=', etaCache[unidad][pedidosUnidad[j].pedido]);
           }
         }
         origenCoords = destCoords;
       }
-    } catch(e) {}
+    } catch(e) { console.log('[ETA] ERROR EN CATCH:', e); }
 
     etaCalculando[unidad] = false;
     filtrar();
@@ -1003,6 +1020,7 @@ function guardarCambios() {
         var idx = datos.findIndex(function(d){ return d.fila === filaActual.fila; });
         if (idx >= 0) { datos[idx].hora=hora; datos[idx].estatus=estatus; datos[idx].subest=subest; }
         if (filaActual.unidad) delete etaCache[filaActual.unidad];
+        console.log('[ETA] Guardado OK, llamando calcularETAsPendientes con unidad=', filaActual.unidad);
         cerrarModal();
         filtrar();
         calcularETAsPendientes(filaActual.unidad);
