@@ -542,10 +542,12 @@ function direccionSimple(r) {
 }
 
 var geocodeCache = {};
+function sleep(ms) { return new Promise(function(res){ setTimeout(res, ms); }); }
+
 function geocodificarUrl(direccion) {
   var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(direccion);
   return fetch(url, { headers: { 'Accept-Language': 'es' } })
-    .then(function(r){ return r.json(); })
+    .then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.json(); })
     .then(function(arr){
       if (arr && arr[0]) return { lat: parseFloat(arr[0].lat), lon: parseFloat(arr[0].lon) };
       return null;
@@ -557,12 +559,14 @@ async function geocodificarRow(r) {
   var full = direccionTexto(r);
   if (geocodeCache[full]) return geocodeCache[full];
 
+  await sleep(1100); // respeta el límite de 1 request/seg de Nominatim
   var coords = await geocodificarUrl(full);
   if (!coords) {
     // Fallback: intentar solo con colonia + municipio (más confiable)
     var simple = direccionSimple(r);
     if (simple && geocodeCache[simple]) { coords = geocodeCache[simple]; }
     else if (simple) {
+      await sleep(1100);
       coords = await geocodificarUrl(simple);
       if (coords) geocodeCache[simple] = coords;
     }
@@ -621,7 +625,8 @@ async function calcularETAsPendientes() {
 
     if (!pedidosUnidad.length) { etaCalculando[unidad]=false; continue; }
 
-    if (!etaCache[unidad]) etaCache[unidad] = {};
+    // Reiniciar cache de esta unidad en cada recálculo (evita arrastrar horas viejas)
+    etaCache[unidad] = {};
 
     // Encontrar el siguiente pedido sin estatus (el primero pendiente en orden)
     var siguienteIdx = -1;
@@ -631,28 +636,31 @@ async function calcularETAsPendientes() {
     }
     if (siguienteIdx === -1) { etaCalculando[unidad]=false; continue; }
 
-    // Punto de partida: hora de salida, posición = primer pedido (o la unidad misma si no hay anterior con dirección)
-    var horaBaseMin = parseHoraAMin(pedidosUnidad[0].horaSalida);
+    // Hora base: la hora REAL del último pedido entregado/marcado (no la de salida),
+    // o la hora de salida si todavía no se ha entregado ninguno.
+    var horaBaseMin = null;
+    var puntoPartidaRow = null;
+
+    if (siguienteIdx > 0) {
+      var anterior = pedidosUnidad[siguienteIdx - 1];
+      horaBaseMin = parseHoraAMin(anterior.hora);
+      puntoPartidaRow = anterior;
+    }
+    if (horaBaseMin === null) {
+      horaBaseMin = parseHoraAMin(pedidosUnidad[0].horaSalida);
+      puntoPartidaRow = pedidosUnidad[0];
+    }
     if (horaBaseMin === null) { etaCalculando[unidad]=false; continue; }
 
-    var origenCoords = null;
-    var acumMin = 0;
-
-    // Si hay pedidos anteriores ya con estatus, partimos del último de ellos
-    var startFrom = 0;
-    if (siguienteIdx > 0) startFrom = siguienteIdx; // ya tenemos su tiempo acumulado en cache si se calculó antes
-
     try {
-      // Geocodificar punto de partida: si hay un pedido anterior entregado, usar su dirección; si no, usar el primero de la ruta como referencia de origen
-      var puntoPartidaRow = siguienteIdx > 0 ? pedidosUnidad[siguienteIdx-1] : pedidosUnidad[0];
-      origenCoords = await geocodificarRow(puntoPartidaRow);
-
-      acumMin = siguienteIdx > 0 ? 0 : 0; // tiempo desde la salida hasta el primer punto se ignora (offset simple)
+      var origenCoords = await geocodificarRow(puntoPartidaRow);
+      var acumMin = 0;
 
       for (var j = siguienteIdx; j < pedidosUnidad.length; j++) {
         var destCoords = await geocodificarRow(pedidosUnidad[j]);
-        if (!origenCoords || !destCoords) { 
+        if (!origenCoords || !destCoords) {
           etaCache[unidad][pedidosUnidad[j].pedido] = null;
+          origenCoords = destCoords || origenCoords;
           continue;
         }
         var segs = await tiempoViajeOSRM(origenCoords, destCoords);
@@ -956,6 +964,7 @@ function guardarCambios() {
       if (res.ok) {
         var idx = datos.findIndex(function(d){ return d.fila === filaActual.fila; });
         if (idx >= 0) { datos[idx].hora=hora; datos[idx].estatus=estatus; datos[idx].subest=subest; }
+        if (filaActual.unidad) delete etaCache[filaActual.unidad];
         cerrarModal();
         filtrar();
         calcularETAsPendientes();
