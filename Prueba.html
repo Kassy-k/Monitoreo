@@ -614,7 +614,7 @@ function minAHora(min) {
 var ALMACEN_DIR = 'Av. 1 de Mayo 86, Centro Industrial Tlalnepantla, 54030 Tlalnepantla de Baz, México';
 var almacenCoords = null;
 
-async function calcularETAsPendientes() {
+async function calcularETAsPendientes(unidadForzada) {
   if (!almacenCoords) {
     almacenCoords = await geocodificarUrl(ALMACEN_DIR);
   }
@@ -630,7 +630,8 @@ async function calcularETAsPendientes() {
   });
 
   for (var unidad in porUnidad) {
-    if (etaCalculando[unidad]) continue;
+    var esForzado = (unidadForzada && unidad === unidadForzada);
+    if (etaCalculando[unidad] && !esForzado) continue;
     etaCalculando[unidad] = true;
 
     var pedidosUnidad = porUnidad[unidad].filter(function(r){ return r.orden && !isNaN(parseInt(r.orden)); });
@@ -1004,7 +1005,7 @@ function guardarCambios() {
         if (filaActual.unidad) delete etaCache[filaActual.unidad];
         cerrarModal();
         filtrar();
-        calcularETAsPendientes();
+        calcularETAsPendientes(filaActual.unidad);
       } else {
         alert('Error al guardar: ' + (res.msg||''));
       }
