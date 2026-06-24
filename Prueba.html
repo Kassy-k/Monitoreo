@@ -591,12 +591,15 @@ function tiempoViajeOSRM(origen, destino) {
 
 function parseHoraAMin(hora) {
   if (!hora) return null;
-  var h = hora.trim().toLowerCase();
-  var m = h.match(/(\d{1,2}):(\d{2})\s*(am|pm)?/);
+  var h = String(hora).trim().toLowerCase().replace(/\s+/g, '');
+  // Acepta: "2:50pm", "2:50 pm", "14:50", "09:15am", etc.
+  var m = h.match(/^(\d{1,2}):(\d{2})(am|pm)?$/);
   if (!m) return null;
   var hh = parseInt(m[1]), mm = parseInt(m[2]);
+  if (isNaN(hh) || isNaN(mm) || mm > 59) return null;
   if (m[3] === 'pm' && hh < 12) hh += 12;
   if (m[3] === 'am' && hh === 12) hh = 0;
+  if (hh > 23) return null;
   return hh*60+mm;
 }
 
@@ -608,10 +611,20 @@ function minAHora(min) {
   return hh12 + ':' + String(mm).padStart(2,'0') + ' ' + ampm;
 }
 
+var ALMACEN_DIR = 'Av. 1 de Mayo 86, Centro Industrial Tlalnepantla, 54030 Tlalnepantla de Baz, México';
+var almacenCoords = null;
+
 async function calcularETAsPendientes() {
+  if (!almacenCoords) {
+    almacenCoords = await geocodificarUrl(ALMACEN_DIR);
+  }
+
+  var fechaActiva = document.getElementById('filtro-fecha').value || hoy();
+
   var porUnidad = {};
   datos.forEach(function(r){
     if (!r.unidad || !r.horaSalida) return;
+    if (normFecha(r.fecha) !== fechaActiva) return; // solo pedidos del día activo
     if (!porUnidad[r.unidad]) porUnidad[r.unidad] = [];
     porUnidad[r.unidad].push(r);
   });
@@ -636,24 +649,30 @@ async function calcularETAsPendientes() {
     }
     if (siguienteIdx === -1) { etaCalculando[unidad]=false; continue; }
 
-    // Hora base: la hora REAL del último pedido entregado/marcado (no la de salida),
-    // o la hora de salida si todavía no se ha entregado ninguno.
-    var horaBaseMin = null;
-    var puntoPartidaRow = null;
+    var horaSalidaMin = parseHoraAMin(pedidosUnidad[0].horaSalida);
+    if (horaSalidaMin === null) { etaCalculando[unidad]=false; continue; }
 
-    if (siguienteIdx > 0) {
+    // Hora base: la hora REAL del último pedido entregado (si existe y es posterior a la salida),
+    // o la hora de salida del almacén si todavía no se ha entregado ninguno.
+    var horaBaseMin = null;
+    var origenCoords = null;
+
+    if (siguienteIdx > 0 && pedidosUnidad[siguienteIdx-1].hora) {
       var anterior = pedidosUnidad[siguienteIdx - 1];
-      horaBaseMin = parseHoraAMin(anterior.hora);
-      puntoPartidaRow = anterior;
+      var horaAnteriorMin = parseHoraAMin(anterior.hora);
+      // Solo confiar en esta hora si es posterior (o igual) a la hora de salida del día
+      if (horaAnteriorMin !== null && horaAnteriorMin >= horaSalidaMin) {
+        horaBaseMin = horaAnteriorMin;
+        origenCoords = await geocodificarRow(anterior);
+      }
     }
     if (horaBaseMin === null) {
-      horaBaseMin = parseHoraAMin(pedidosUnidad[0].horaSalida);
-      puntoPartidaRow = pedidosUnidad[0];
+      horaBaseMin = horaSalidaMin;
+      origenCoords = almacenCoords;
     }
     if (horaBaseMin === null) { etaCalculando[unidad]=false; continue; }
 
     try {
-      var origenCoords = await geocodificarRow(puntoPartidaRow);
       var acumMin = 0;
 
       for (var j = siguienteIdx; j < pedidosUnidad.length; j++) {
@@ -669,7 +688,12 @@ async function calcularETAsPendientes() {
         } else {
           acumMin += segs/60;
           var etaMin = horaBaseMin + acumMin;
-          etaCache[unidad][pedidosUnidad[j].pedido] = minAHora(etaMin);
+          // Sanity check: si el estimado pasa de 11pm o se va a otro día, algo salió mal (ruta muy larga o geocoding erróneo)
+          if (etaMin - horaBaseMin > 14*60) {
+            etaCache[unidad][pedidosUnidad[j].pedido] = null;
+          } else {
+            etaCache[unidad][pedidosUnidad[j].pedido] = minAHora(etaMin);
+          }
         }
         origenCoords = destCoords;
       }
