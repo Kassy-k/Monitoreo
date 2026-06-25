@@ -542,6 +542,15 @@ function direccionSimple(r) {
 }
 
 var geocodeCache = {};
+try {
+  var stored = localStorage.getItem('geocodeCache');
+  if (stored) geocodeCache = JSON.parse(stored);
+} catch(e) { geocodeCache = {}; }
+
+function guardarGeocodeCache() {
+  try { localStorage.setItem('geocodeCache', JSON.stringify(geocodeCache)); } catch(e) {}
+}
+
 function sleep(ms) { return new Promise(function(res){ setTimeout(res, ms); }); }
 
 function geocodificarUrl(direccion) {
@@ -557,9 +566,9 @@ function geocodificarUrl(direccion) {
 
 async function geocodificarRow(r) {
   var full = direccionTexto(r);
-  if (geocodeCache[full]) return geocodeCache[full];
+  if (geocodeCache[full]) return geocodeCache[full]; // ya en caché, instantáneo
 
-  await sleep(1100); // respeta el límite de 1 request/seg de Nominatim
+  await sleep(1100); // respeta el límite de 1 request/seg de Nominatim (solo aplica si NO está en caché)
   var coords = await geocodificarUrl(full);
   if (!coords) {
     // Fallback: intentar solo con colonia + municipio (más confiable)
@@ -568,10 +577,11 @@ async function geocodificarRow(r) {
     else if (simple) {
       await sleep(1100);
       coords = await geocodificarUrl(simple);
-      if (coords) geocodeCache[simple] = coords;
+      if (coords) { geocodeCache[simple] = coords; guardarGeocodeCache(); }
     }
   } else {
     geocodeCache[full] = coords;
+    guardarGeocodeCache();
   }
   return coords;
 }
@@ -617,7 +627,12 @@ var almacenCoords = null;
 async function calcularETAsPendientes(unidadForzada) {
   console.log('[ETA] calcularETAsPendientes llamado, forzada=', unidadForzada);
   if (!almacenCoords) {
-    almacenCoords = await geocodificarUrl(ALMACEN_DIR);
+    if (geocodeCache[ALMACEN_DIR]) {
+      almacenCoords = geocodeCache[ALMACEN_DIR];
+    } else {
+      almacenCoords = await geocodificarUrl(ALMACEN_DIR);
+      if (almacenCoords) { geocodeCache[ALMACEN_DIR] = almacenCoords; guardarGeocodeCache(); }
+    }
     console.log('[ETA] almacenCoords=', almacenCoords);
   }
 
