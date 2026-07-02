@@ -374,12 +374,12 @@ function tiendaDe(pedido) {
 
 function normFecha(f) {
   if (!f || !String(f).trim()) return '';
-  var d = new Date(String(f).trim());
-  if (!isNaN(d.getTime())) {
-    var mx = new Date(d.getTime() + (-6*3600000) + d.getTimezoneOffset()*60000);
-    return mx.getFullYear()+'-'+String(mx.getMonth()+1).padStart(2,'0')+'-'+String(mx.getDate()).padStart(2,'0');
-  }
-  var sl = String(f).toLowerCase().trim();
+  var s = String(f).trim();
+  // Formato YYYY-MM-DD (el que genera el Apps Script) — usar directo, sin conversiones de zona horaria
+  var mIso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (mIso) return mIso[1]+'-'+mIso[2].padStart(2,'0')+'-'+mIso[3].padStart(2,'0');
+
+  var sl = s.toLowerCase();
   var m1 = sl.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
   if (m1) { var y=m1[3]; if(y.length===2)y='20'+y; return y+'-'+m1[2].padStart(2,'0')+'-'+m1[1].padStart(2,'0'); }
   var MES={enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,julio:7,agosto:8,septiembre:9,octubre:10,noviembre:11,diciembre:12};
@@ -406,9 +406,14 @@ function badgeCls(e) {
   return 'b-def';
 }
 
+var MESES_CORTO = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 function fmtFecha(f) {
-  var d=new Date(f);
-  if(!isNaN(d.getTime())) return d.toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'});
+  var iso = normFecha(f);
+  if (iso) {
+    var partes = iso.split('-');
+    var mes = MESES_CORTO[parseInt(partes[1],10)-1] || '';
+    return partes[2] + ' ' + mes + ' ' + partes[0];
+  }
   return f||'—';
 }
 
