@@ -35,8 +35,6 @@
   .btn{height:32px;padding:0 12px;border:0.5px solid var(--border);border-radius:7px;background:var(--surface2);font-size:13px;cursor:pointer;color:var(--text2);transition:background 0.15s,color 0.15s;white-space:nowrap;}
   .btn:hover{background:var(--border);color:var(--text);}
   .btn-primary{background:var(--accent-bg);border-color:var(--accent);color:var(--accent);font-weight:500;}
-  .btn-salida{height:32px;padding:0 14px;border:0.5px solid var(--accent);border-radius:7px;background:var(--accent-bg);color:var(--accent);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;display:none;}
-  .btn-salida:hover{opacity:0.85;}
   .spacer{flex:1;}
   .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;padding:1rem 1.5rem;}
   .stat{background:var(--surface);border:0.5px solid var(--border2);border-radius:10px;padding:0.85rem 1rem;}
@@ -63,6 +61,7 @@
     header{padding:0.75rem 1rem;} .controles{padding:0.65rem 1rem;} .stats{padding:0.75rem 1rem;} .tabla-wrap{padding:0 0.75rem 2rem;} input[type="text"]{min-width:120px;}
   }
 
+  /* Botón editar */
   .btn-edit{height:34px;padding:0 12px;border:0.5px solid var(--border);border-radius:8px;background:var(--surface2);font-size:13px;cursor:pointer;color:var(--text2);transition:background 0.15s;}
   .btn-edit:hover{background:var(--border);}
   .btn-edit.activo{background:#e1f5ee;border-color:#0f6e56;color:#0f6e56;font-weight:500;}
@@ -70,6 +69,7 @@
   .btn-edit-fila{background:none;border:none;cursor:pointer;font-size:15px;padding:2px 6px;border-radius:6px;color:var(--text3);}
   .btn-edit-fila:hover{background:var(--surface2);color:var(--accent);}
 
+  /* Modales base */
   .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;}
   .modal-overlay.visible{display:flex;}
   .modal{background:var(--surface);border-radius:16px;padding:1.5rem;width:90%;max-width:420px;box-shadow:0 8px 32px rgba(0,0,0,0.2);}
@@ -85,6 +85,7 @@
   .btn-cancelar{background:var(--surface2);color:var(--text2);border:0.5px solid var(--border) !important;}
   .guardando{opacity:0.6;pointer-events:none;}
 
+  /* Modal detalle pedido */
   .modal-detalle{max-width:380px;}
   .detalle-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.25rem;}
   .detalle-pedido-num{font-family:'SF Mono','Fira Code',monospace;font-size:18px;font-weight:600;letter-spacing:0.02em;color:var(--text);}
@@ -109,21 +110,8 @@
   .detalle-row .dr-val{color:var(--text);font-weight:500;text-align:right;}
   .sin-unidad{text-align:center;padding:0.75rem;color:var(--text3);font-size:13px;}
 
-  .obs-input{width:100%;min-width:160px;height:28px;border:0.5px solid var(--border);border-radius:6px;padding:0 8px;font-size:12px;background:var(--surface2);color:var(--text);outline:none;transition:border-color 0.15s;}
-  .obs-input:focus{border-color:var(--accent);}
-  .obs-input::placeholder{color:var(--text3);}
-  .obs-texto{font-size:12px;color:var(--text2);}
 
-  .orden-input{width:50px;height:28px;border:0.5px solid var(--border);border-radius:6px;padding:0 6px;font-size:12px;background:var(--surface2);color:var(--text);outline:none;text-align:center;}
-  .orden-input:focus{border-color:var(--accent);}
-
-  .eta-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap;}
-  .eta-pendiente{background:var(--surface2);color:var(--text3);}
-  .eta-siguiente{background:#faeeda;color:#633806;}
-  [data-theme="dark"] .eta-siguiente{background:#412402;color:#fac775;}
-  .eta-calculado{background:#e1f5ee;color:#085041;}
-  [data-theme="dark"] .eta-calculado{background:#04342c;color:#9fe1cb;}
-
+  /* Gauge mini en header */
   .gauge-mini{position:relative;display:flex;align-items:center;justify-content:center;width:100px;height:54px;}
   .gauge-mini-svg{width:100px;height:54px;}
   .gauge-track{stroke:#e5e3db;}
@@ -137,6 +125,17 @@
   .gauge-mini-pct{font-size:13px;font-weight:700;letter-spacing:-0.01em;color:var(--text);line-height:1;}
   .gauge-mini-lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;}
   @media(max-width:640px){.gauge-mini{width:70px;height:38px;}.gauge-mini-svg{width:70px;height:38px;}.gauge-mini-pct{font-size:11px;}}
+
+  /* Observaciones */
+  .obs-texto{font-size:12px;color:var(--text2);}
+
+  .obs-input{width:100%;min-width:160px;height:28px;border:0.5px solid var(--border);border-radius:6px;padding:0 8px;font-size:12px;background:var(--surface2);color:var(--text);outline:none;transition:border-color 0.15s;}
+  .obs-input:focus{border-color:var(--accent);}
+  .obs-input::placeholder{color:var(--text3);}
+
+  /* ETA */
+  .eta-tag{display:block;font-size:11px;color:var(--accent);margin-top:2px;font-weight:500;}
+  .eta-calculando{display:block;font-size:11px;color:var(--text3);margin-top:2px;}
 </style>
 </head>
 <body>
@@ -146,7 +145,6 @@
     <h1>Monitoreo de Entregas</h1>
   </div>
   <div class="header-right">
-    <button class="btn-salida" id="btn-salida-ruta" onclick="abrirModalSalida()">🚦 Salir a ruta</button>
     <div class="gauge-mini" id="gauge-mini-wrap">
       <svg viewBox="0 0 120 68" class="gauge-mini-svg">
         <defs>
@@ -263,21 +261,6 @@
   </div>
 </div>
 
-<!-- Modal salida a ruta -->
-<div class="modal-overlay" id="modal-salida-overlay">
-  <div class="modal">
-    <h3>🚦 Registrar salida a ruta</h3>
-    <label>Unidad</label>
-    <select id="salida-unidad"></select>
-    <label>Hora de salida</label>
-    <input type="text" id="salida-hora" placeholder="ej. 09:15">
-    <div class="modal-btns">
-      <button class="btn-cancelar" onclick="cerrarModalSalida()">Cancelar</button>
-      <button class="btn-guardar" id="btn-guardar-salida" onclick="guardarSalida()">Confirmar</button>
-    </div>
-  </div>
-</div>
-
 <!-- Modal detalle unidad -->
 <div class="modal-overlay" id="modal-detalle-overlay">
   <div class="modal modal-detalle">
@@ -289,6 +272,7 @@
       <button class="btn-cerrar-detalle" onclick="cerrarDetalle()">✕</button>
     </div>
 
+    <!-- Card unidad -->
     <div class="detalle-unidad-card" id="det-unidad-card">
       <div id="det-tipo-badge"></div>
       <div class="unidad-info-grid">
@@ -317,6 +301,10 @@
       <span class="dr-label">Municipio</span>
       <span class="dr-val" id="det-muni">—</span>
     </div>
+    <div class="detalle-row" id="det-eta-row" style="display:none;">
+      <span class="dr-label">ETA estimado</span>
+      <span class="dr-val" id="det-eta">—</span>
+    </div>
     <div class="detalle-row">
       <span class="dr-label">Hora</span>
       <span class="dr-val" id="det-hora">—</span>
@@ -329,20 +317,16 @@
       <span class="dr-label">Sub estatus</span>
       <span class="dr-val" id="det-subest">—</span>
     </div>
-    <div class="detalle-row" id="det-orden-row">
-      <span class="dr-label">Orden de ruta</span>
-      <span class="dr-val" id="det-orden">—</span>
-    </div>
-    <div class="detalle-row" id="det-eta-row">
-      <span class="dr-label">Hora estimada</span>
-      <span class="dr-val" id="det-eta">—</span>
-    </div>
 
+    <!-- Teléfono: solo STUDIO, solo modo edición -->
     <div id="det-tel-row" style="display:none;margin-top:0.75rem;">
       <div style="height:0.5px;background:var(--border2);margin-bottom:0.75rem;"></div>
       <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">📱 Teléfono operador</div>
       <div style="display:flex;gap:8px;align-items:center;">
-        <span id="det-tel-texto" style="flex:1;font-size:14px;font-weight:500;color:var(--text);"></span>
+        <input type="tel" id="det-tel-input" placeholder="10 dígitos"
+          style="flex:1;height:34px;border:0.5px solid var(--border);border-radius:8px;padding:0 10px;font-size:14px;background:var(--surface2);color:var(--text);outline:none;display:none;"
+          >
+        <span id="det-tel-texto" style="flex:1;font-size:14px;font-weight:500;color:var(--text);display:none;"></span>
         <a id="det-tel-link" href="#" target="_blank"
           style="height:34px;padding:0 12px;background:var(--accent-bg);border:0.5px solid var(--accent);border-radius:8px;color:var(--accent);font-size:13px;font-weight:500;text-decoration:none;display:none;align-items:center;white-space:nowrap;">
           💬 WA
@@ -357,8 +341,7 @@
   <table id="tabla" style="display:none;">
     <thead>
       <tr>
-        <th id="th-orden" style="display:none;">Orden</th>
-        <th>Pedido</th><th>Tienda</th><th>Fecha</th><th>Estimado</th><th>Hora</th><th>Estatus</th><th>Sub estatus</th><th id="col-obs">Observaciones</th>
+        <th>Pedido</th><th>Tienda</th><th>Fecha</th><th>Municipio</th><th>Hora</th><th>Estatus</th><th>Sub estatus</th><th id="col-obs">Observaciones</th>
         <th id="col-editar" style="display:none;"></th>
       </tr>
     </thead>
@@ -368,12 +351,11 @@
 
 <script>
 var URL_API = 'https://monitoreo.nr3551642.workers.dev/';
-var URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbxqJTWIKaBETtgMBccsVIMnJ6cDPg_E2IpzfBIG0JKsgRacfhJbgTAbzWKeAhc9oWto/exec';
+var URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbxDnGjaeeRhdLcaYtYynVZdn04Avy2VIzoJ3x46V0xy6-kdPDpb5mOE6pnfmnmnndLX/exec';
 var PASS = 'KasselMonitoreo';
 var modoEdicion = false;
 var datos = [];
-var etaCache = {}; // unidad -> {pedido: 'HH:MM AM/PM'}
-var etaCalculando = {}; // unidad -> bool
+var etas = {}; // { pedido: "2:15 pm" }
 
 var TIENDAS = {
   'DECOSFE':'SANTA FE','DECOINT':'INTERLOMAS','DECOZAR':'ZARAGOZA',
@@ -401,12 +383,12 @@ function tiendaDe(pedido) {
 
 function normFecha(f) {
   if (!f || !String(f).trim()) return '';
-  var d = new Date(String(f).trim());
-  if (!isNaN(d.getTime())) {
-    var mx = new Date(d.getTime() + (-6*3600000) + d.getTimezoneOffset()*60000);
-    return mx.getFullYear()+'-'+String(mx.getMonth()+1).padStart(2,'0')+'-'+String(mx.getDate()).padStart(2,'0');
-  }
-  var sl = String(f).toLowerCase().trim();
+  var s = String(f).trim();
+  // Formato YYYY-MM-DD (el que genera el Apps Script) — usar directo, sin conversiones de zona horaria
+  var mIso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (mIso) return mIso[1]+'-'+mIso[2].padStart(2,'0')+'-'+mIso[3].padStart(2,'0');
+
+  var sl = s.toLowerCase();
   var m1 = sl.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
   if (m1) { var y=m1[3]; if(y.length===2)y='20'+y; return y+'-'+m1[2].padStart(2,'0')+'-'+m1[1].padStart(2,'0'); }
   var MES={enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,julio:7,agosto:8,septiembre:9,octubre:10,noviembre:11,diciembre:12};
@@ -433,10 +415,35 @@ function badgeCls(e) {
   return 'b-def';
 }
 
+var MESES_CORTO = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 function fmtFecha(f) {
-  var d=new Date(f);
-  if(!isNaN(d.getTime())) return d.toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'});
+  var iso = normFecha(f);
+  if (iso) {
+    var partes = iso.split('-');
+    var mes = MESES_CORTO[parseInt(partes[1],10)-1] || '';
+    return partes[2] + ' ' + mes + ' ' + partes[0];
+  }
   return f||'—';
+}
+
+function esPendiente(r) {
+  return !r.estatus || !r.estatus.trim();
+}
+
+// Celda de municipio: agrega el ETA debajo si el pedido está pendiente y es de hoy
+function muniCell(r) {
+  var muni = r.muni || '—';
+  if (!esPendiente(r) || normFecha(r.fecha) !== hoy()) {
+    return '<td>' + muni + '</td>';
+  }
+  var eta = etas[r.pedido];
+  if (eta) {
+    return '<td>' + muni + '<span class="eta-tag">⏱ ETA ' + eta + '</span></td>';
+  }
+  if (window._etaCargando) {
+    return '<td>' + muni + '<span class="eta-calculando">calculando ETA...</span></td>';
+  }
+  return '<td>' + muni + '</td>';
 }
 
 function tipoUnidad(u) {
@@ -448,329 +455,6 @@ function tipoUnidad(u) {
   return { label: u.toUpperCase(), cls: 'tipo-otro', emoji: '🚗' };
 }
 
-function getObs(pedido) {
-  try { return localStorage.getItem('obs_' + pedido) || ''; } catch(e) { return ''; }
-}
-
-function saveObs(pedido, val) {
-  try { localStorage.setItem('obs_' + pedido, val); } catch(e) {}
-}
-
-function obsCell(pedido) {
-  var val = getObs(pedido);
-  if (modoEdicion) {
-    var safe = val.replace(/"/g, '&quot;');
-    return '<td onclick="event.stopPropagation()"><input class="obs-input" type="text" placeholder="Agregar observación..." value="' + safe + '" onchange="saveObs(this.dataset.pid, this.value)" data-pid="' + pedido + '" maxlength="120"></td>';
-  } else {
-    var display = val ? ('<span class="obs-texto">' + val + '</span>') : '<span style="color:var(--text3);font-size:11px;">—</span>';
-    return '<td>' + display + '</td>';
-  }
-}
-
-// ============ ORDEN DE RUTA ============
-function ordenCell(r, idx) {
-  if (modoEdicion) {
-    return '<td onclick="event.stopPropagation()"><input class="orden-input" type="text" value="' + (r.orden||'') + '" onchange="guardarOrden(' + r.fila + ', this.value)" maxlength="6"></td>';
-  }
-  return '<td style="display:none;"></td>';
-}
-
-function guardarOrden(fila, valor) {
-  var url = URL_SCRIPT + '?accion=orden&fila=' + fila + '&orden=' + encodeURIComponent(valor.trim());
-  fetch(url).then(function(r){return r.json();}).then(function(res){
-    if (res.ok) {
-      var idx = datos.findIndex(function(d){return d.fila===fila;});
-      if (idx>=0) datos[idx].orden = valor.trim();
-      filtrar();
-    }
-  }).catch(function(){});
-}
-
-// ============ SALIDA A RUTA ============
-function unidadesDisponibles() {
-  var set = {};
-  datos.forEach(function(r){ if(r.unidad) set[r.unidad]=true; });
-  return Object.keys(set).sort();
-}
-
-function abrirModalSalida() {
-  var sel = document.getElementById('salida-unidad');
-  var unidades = unidadesDisponibles();
-  sel.innerHTML = unidades.map(function(u){return '<option value="'+u+'">'+u.toUpperCase()+'</option>';}).join('');
-  document.getElementById('salida-hora').value = new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false});
-  document.getElementById('modal-salida-overlay').classList.add('visible');
-}
-
-function cerrarModalSalida() {
-  document.getElementById('modal-salida-overlay').classList.remove('visible');
-}
-
-function guardarSalida() {
-  var unidad = document.getElementById('salida-unidad').value;
-  var hora = document.getElementById('salida-hora').value.trim();
-  if (!unidad || !hora) return;
-  var btn = document.getElementById('btn-guardar-salida');
-  btn.textContent = 'Guardando...';
-  btn.classList.add('guardando');
-
-  var fecha = document.getElementById('filtro-fecha').value || hoy();
-  var url = URL_SCRIPT + '?accion=salida&unidad=' + encodeURIComponent(unidad) + '&fecha=' + fecha + '&hora=' + encodeURIComponent(hora);
-
-  fetch(url).then(function(r){return r.json();}).then(function(res){
-    if (res.ok) {
-      datos.forEach(function(d){ if(d.unidad===unidad) d.horaSalida = hora; });
-      delete etaCache[unidad];
-      cerrarModalSalida();
-      filtrar();
-      calcularETAsPendientes();
-    } else {
-      alert('Error al guardar salida.');
-    }
-  }).catch(function(){ alert('Error de conexión.'); })
-  .finally(function(){ btn.textContent='Confirmar'; btn.classList.remove('guardando'); });
-}
-
-// ============ CÁLCULO DE ETAs CON OSRM ============
-function direccionTexto(r) {
-  var partes = [r.calle, r.colonia, r.cp, r.municipioDir, 'México'].filter(function(x){return x && x.trim();});
-  return partes.join(', ');
-}
-
-function direccionSimple(r) {
-  var partes = [r.colonia, r.municipioDir, 'México'].filter(function(x){return x && x.trim();});
-  return partes.join(', ');
-}
-
-var geocodeCache = {};
-try {
-  var stored = localStorage.getItem('geocodeCache');
-  if (stored) geocodeCache = JSON.parse(stored);
-} catch(e) { geocodeCache = {}; }
-
-function guardarGeocodeCache() {
-  try { localStorage.setItem('geocodeCache', JSON.stringify(geocodeCache)); } catch(e) {}
-}
-
-function sleep(ms) { return new Promise(function(res){ setTimeout(res, ms); }); }
-
-function geocodificarUrl(direccion) {
-  var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(direccion);
-  return fetch(url, { headers: { 'Accept-Language': 'es' } })
-    .then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.json(); })
-    .then(function(arr){
-      if (arr && arr[0]) return { lat: parseFloat(arr[0].lat), lon: parseFloat(arr[0].lon) };
-      return null;
-    })
-    .catch(function(){ return null; });
-}
-
-async function geocodificarRow(r) {
-  var full = direccionTexto(r);
-  if (geocodeCache[full]) return geocodeCache[full]; // ya en caché, instantáneo
-
-  await sleep(1100); // respeta el límite de 1 request/seg de Nominatim (solo aplica si NO está en caché)
-  var coords = await geocodificarUrl(full);
-  if (!coords) {
-    // Fallback: intentar solo con colonia + municipio (más confiable)
-    var simple = direccionSimple(r);
-    if (simple && geocodeCache[simple]) { coords = geocodeCache[simple]; }
-    else if (simple) {
-      await sleep(1100);
-      coords = await geocodificarUrl(simple);
-      if (coords) { geocodeCache[simple] = coords; guardarGeocodeCache(); }
-    }
-  } else {
-    geocodeCache[full] = coords;
-    guardarGeocodeCache();
-  }
-  return coords;
-}
-
-function tiempoViajeOSRM(origen, destino) {
-  var url = 'https://router.project-osrm.org/route/v1/driving/' + origen.lon + ',' + origen.lat + ';' + destino.lon + ',' + destino.lat + '?overview=false';
-  return fetch(url)
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      if (data && data.routes && data.routes[0]) {
-        return data.routes[0].duration; // segundos
-      }
-      return null;
-    })
-    .catch(function(){ return null; });
-}
-
-function parseHoraAMin(hora) {
-  if (!hora) return null;
-  var h = String(hora).trim().toLowerCase().replace(/\s+/g, '');
-  // Acepta: "2:50pm", "2:50 pm", "14:50", "09:15am", etc.
-  var m = h.match(/^(\d{1,2}):(\d{2})(am|pm)?$/);
-  if (!m) return null;
-  var hh = parseInt(m[1]), mm = parseInt(m[2]);
-  if (isNaN(hh) || isNaN(mm) || mm > 59) return null;
-  if (m[3] === 'pm' && hh < 12) hh += 12;
-  if (m[3] === 'am' && hh === 12) hh = 0;
-  if (hh > 23) return null;
-  return hh*60+mm;
-}
-
-function minAHora(min) {
-  min = ((min % 1440) + 1440) % 1440;
-  var hh = Math.floor(min/60), mm = Math.round(min%60);
-  var ampm = hh>=12 ? 'PM':'AM';
-  var hh12 = hh%12; if(hh12===0) hh12=12;
-  return hh12 + ':' + String(mm).padStart(2,'0') + ' ' + ampm;
-}
-
-var ALMACEN_DIR = 'Av. 1 de Mayo 86, Centro Industrial Tlalnepantla, 54030 Tlalnepantla de Baz, México';
-var almacenCoords = null;
-
-async function calcularETAsPendientes(unidadForzada) {
-  console.log('[ETA] calcularETAsPendientes llamado, forzada=', unidadForzada);
-  if (!almacenCoords) {
-    if (geocodeCache[ALMACEN_DIR]) {
-      almacenCoords = geocodeCache[ALMACEN_DIR];
-    } else {
-      almacenCoords = await geocodificarUrl(ALMACEN_DIR);
-      if (almacenCoords) { geocodeCache[ALMACEN_DIR] = almacenCoords; guardarGeocodeCache(); }
-    }
-    console.log('[ETA] almacenCoords=', almacenCoords);
-  }
-
-  var fechaActiva = document.getElementById('filtro-fecha').value || hoy();
-  console.log('[ETA] fechaActiva=', fechaActiva);
-
-  var porUnidad = {};
-  datos.forEach(function(r){
-    if (!r.unidad || !r.horaSalida) return;
-    if (normFecha(r.fecha) !== fechaActiva) return; // solo pedidos del día activo
-    if (!porUnidad[r.unidad]) porUnidad[r.unidad] = [];
-    porUnidad[r.unidad].push(r);
-  });
-  console.log('[ETA] porUnidad=', porUnidad);
-
-  for (var unidad in porUnidad) {
-    var esForzado = (unidadForzada && unidad === unidadForzada);
-    console.log('[ETA] procesando unidad=', unidad, 'esForzado=', esForzado, 'etaCalculando=', etaCalculando[unidad]);
-    if (etaCalculando[unidad] && !esForzado) { console.log('[ETA] saltando, ya calculando'); continue; }
-    etaCalculando[unidad] = true;
-
-    var pedidosUnidad = porUnidad[unidad].filter(function(r){ return r.orden && !isNaN(parseInt(r.orden)); });
-    pedidosUnidad.sort(function(a,b){ return parseInt(a.orden) - parseInt(b.orden); });
-    console.log('[ETA] pedidosUnidad ordenados=', pedidosUnidad.map(function(r){return r.pedido+'(orden:'+r.orden+',estatus:'+r.estatus+')';}));
-
-    if (!pedidosUnidad.length) { console.log('[ETA] sin pedidos con orden válido'); etaCalculando[unidad]=false; continue; }
-
-    // Reiniciar cache de esta unidad en cada recálculo (evita arrastrar horas viejas)
-    etaCache[unidad] = {};
-
-    // Encontrar el siguiente pedido sin estatus (el primero pendiente en orden)
-    var siguienteIdx = -1;
-    for (var i=0;i<pedidosUnidad.length;i++) {
-      var e = (pedidosUnidad[i].estatus||'').trim();
-      if (!e || e === '—') { siguienteIdx = i; break; }
-    }
-    console.log('[ETA] siguienteIdx=', siguienteIdx);
-    if (siguienteIdx === -1) { console.log('[ETA] todos los pedidos ya tienen estatus'); etaCalculando[unidad]=false; continue; }
-
-    var horaSalidaMin = parseHoraAMin(pedidosUnidad[0].horaSalida);
-    console.log('[ETA] horaSalida raw=', pedidosUnidad[0].horaSalida, 'parseado=', horaSalidaMin);
-    if (horaSalidaMin === null) { console.log('[ETA] no se pudo parsear horaSalida'); etaCalculando[unidad]=false; continue; }
-
-    // Hora base: la hora REAL del último pedido entregado (si existe y es posterior a la salida),
-    // o la hora de salida del almacén si todavía no se ha entregado ninguno.
-    var horaBaseMin = null;
-    var origenCoords = null;
-
-    if (siguienteIdx > 0 && pedidosUnidad[siguienteIdx-1].hora) {
-      var anterior = pedidosUnidad[siguienteIdx - 1];
-      var horaAnteriorMin = parseHoraAMin(anterior.hora);
-      console.log('[ETA] pedido anterior=', anterior.pedido, 'hora raw=', anterior.hora, 'parseado=', horaAnteriorMin);
-      // Solo confiar en esta hora si es posterior (o igual) a la hora de salida del día
-      if (horaAnteriorMin !== null && horaAnteriorMin >= horaSalidaMin) {
-        horaBaseMin = horaAnteriorMin;
-        origenCoords = await geocodificarRow(anterior);
-        console.log('[ETA] origenCoords desde pedido anterior=', origenCoords);
-      }
-    }
-    if (horaBaseMin === null) {
-      horaBaseMin = horaSalidaMin;
-      origenCoords = almacenCoords;
-      console.log('[ETA] usando almacén como origen, coords=', origenCoords);
-    }
-    if (horaBaseMin === null) { console.log('[ETA] horaBaseMin null, abortando'); etaCalculando[unidad]=false; continue; }
-
-    try {
-      var acumMinBase = 0; // sin margen (optimista)
-      var MARGEN_TRAFICO = 1.3; // +30%
-      var MIN_POR_PARADA = 15;
-
-      for (var j = siguienteIdx; j < pedidosUnidad.length; j++) {
-        console.log('[ETA] calculando para pedido=', pedidosUnidad[j].pedido);
-        var destCoords = await geocodificarRow(pedidosUnidad[j]);
-        console.log('[ETA] destCoords=', destCoords);
-        if (!origenCoords || !destCoords) {
-          console.log('[ETA] sin coords origen/destino, marcando null');
-          etaCache[unidad][pedidosUnidad[j].pedido] = null;
-          origenCoords = destCoords || origenCoords;
-          continue;
-        }
-        var segs = await tiempoViajeOSRM(origenCoords, destCoords);
-        console.log('[ETA] OSRM segundos=', segs);
-        if (segs === null) {
-          etaCache[unidad][pedidosUnidad[j].pedido] = null;
-        } else {
-          var viajeMin = segs/60;
-          acumMinBase += viajeMin + MIN_POR_PARADA;
-          var acumMinConMargen = acumMinBase * MARGEN_TRAFICO;
-
-          var etaMinOptimista = horaBaseMin + acumMinBase;
-          var etaMinConMargen = horaBaseMin + acumMinConMargen;
-
-          // Sanity check: si el estimado pasa de 14h desde la base, algo salió mal
-          if (etaMinConMargen - horaBaseMin > 14*60) {
-            console.log('[ETA] sanity check falló, descartando');
-            etaCache[unidad][pedidosUnidad[j].pedido] = null;
-          } else {
-            etaCache[unidad][pedidosUnidad[j].pedido] = {
-              desde: minAHora(etaMinOptimista),
-              hasta: minAHora(etaMinConMargen)
-            };
-            console.log('[ETA] resultado para', pedidosUnidad[j].pedido, '=', etaCache[unidad][pedidosUnidad[j].pedido]);
-          }
-        }
-        origenCoords = destCoords;
-      }
-    } catch(e) { console.log('[ETA] ERROR EN CATCH:', e); }
-
-    etaCalculando[unidad] = false;
-    filtrar();
-  }
-}
-
-function etaCell(r) {
-  if (!r.unidad) return '<td><span class="eta-badge eta-pendiente">—</span></td>';
-
-  var estatus = (r.estatus||'').trim();
-  if (estatus && estatus !== '—') {
-    var esOk = estatus.toLowerCase().indexOf('exitoso')>=0 || estatus.toLowerCase()==='entregado';
-    return '<td><span style="color:var(--text3);font-size:13px;">' + (esOk ? '✓' : '—') + '</span></td>';
-  }
-
-  if (!r.horaSalida) {
-    return '<td><span class="eta-badge eta-pendiente">Sin iniciar</span></td>';
-  }
-
-  var cache = etaCache[r.unidad];
-  if (cache && cache[r.pedido]) {
-    var eta = cache[r.pedido];
-    var texto = eta.desde === eta.hasta ? eta.desde : (eta.desde + ' - ' + eta.hasta);
-    return '<td><span class="eta-badge eta-calculado">🕐 ' + texto + '</span></td>';
-  } else if (cache && cache[r.pedido] === null) {
-    return '<td><span class="eta-badge eta-pendiente">N/D</span></td>';
-  }
-  return '<td><span class="eta-badge eta-siguiente">Calculando...</span></td>';
-}
-
 function abrirDetalle(i) {
   var r = window._resActual[i];
   if (!r) return;
@@ -778,12 +462,23 @@ function abrirDetalle(i) {
   document.getElementById('det-pedido').textContent = r.pedido || '—';
   document.getElementById('det-tienda').textContent = r.tienda || '—';
   document.getElementById('det-fecha').textContent = fmtFecha(r.fecha);
-  document.getElementById('det-muni').textContent = r.municipioDir || r.muni || '—';
+  document.getElementById('det-muni').textContent = r.muni || '—';
   document.getElementById('det-hora').textContent = r.hora || '—';
 
+  // ETA (solo si está pendiente y es de hoy, y ya se calculó)
+  var etaRow = document.getElementById('det-eta-row');
+  if (esPendiente(r) && normFecha(r.fecha) === hoy() && etas[r.pedido]) {
+    document.getElementById('det-eta').textContent = etas[r.pedido];
+    etaRow.style.display = 'flex';
+  } else {
+    etaRow.style.display = 'none';
+  }
+
+  // Estatus con badge
   var estatusEl = document.getElementById('det-estatus');
   estatusEl.innerHTML = '<span class="badge ' + badgeCls(r.estatus) + '">' + (r.estatus || '—') + '</span>';
 
+  // Sub estatus
   var subRow = document.getElementById('det-subest-row');
   if (r.subest && r.subest.trim()) {
     document.getElementById('det-subest').textContent = r.subest;
@@ -792,26 +487,7 @@ function abrirDetalle(i) {
     subRow.style.display = 'none';
   }
 
-  // Orden de ruta: solo modo edición
-  var ordenRow = document.getElementById('det-orden-row');
-  if (modoEdicion) {
-    document.getElementById('det-orden').textContent = r.orden || '—';
-    ordenRow.style.display = 'flex';
-  } else {
-    ordenRow.style.display = 'none';
-  }
-
-  // ETA
-  var etaRow = document.getElementById('det-eta-row');
-  var cache = etaCache[r.unidad];
-  if (cache && cache[r.pedido]) {
-    var etaObj = cache[r.pedido];
-    document.getElementById('det-eta').textContent = etaObj.desde === etaObj.hasta ? etaObj.desde : (etaObj.desde + ' - ' + etaObj.hasta + ' aprox');
-    etaRow.style.display = 'flex';
-  } else {
-    etaRow.style.display = 'none';
-  }
-
+  // Unidad
   var unidad = (r.unidad || '').trim();
   var operador = (r.operador || '').trim();
   var placas = (r.placas || '').trim();
@@ -829,13 +505,19 @@ function abrirDetalle(i) {
     document.getElementById('det-unidad-card').style.display = '';
   }
 
+  // Teléfono: solo STUDIO, visible para todos, editable solo en modo edición
   var esStudio = (r.tienda === 'STUDIO');
   var telRow = document.getElementById('det-tel-row');
   if (esStudio) {
     var telGuardado = (r.tel || '').trim();
+    var telInput = document.getElementById('det-tel-input');
     var telTexto = document.getElementById('det-tel-texto');
     var telLink = document.getElementById('det-tel-link');
+
+    telInput.style.display = 'none';
     telTexto.textContent = telGuardado || 'Sin número';
+    telTexto.style.display = 'block';
+
     if (telGuardado) {
       telLink.href = 'https://wa.me/52' + telGuardado.replace(/\D/g,'');
       telLink.style.display = 'inline-flex';
@@ -852,6 +534,25 @@ function abrirDetalle(i) {
 
 function cerrarDetalle() {
   document.getElementById('modal-detalle-overlay').classList.remove('visible');
+}
+
+function obsCell(pedido) {
+  var val = getObs(pedido);
+  if (modoEdicion) {
+    var safe = val.replace(/"/g, '&quot;');
+    return '<td onclick="event.stopPropagation()"><input class="obs-input" type="text" placeholder="Agregar observación..." value="' + safe + '" onchange="saveObs(this.dataset.pid, this.value)" data-pid="' + pedido + '" maxlength="120"></td>';
+  } else {
+    var display = val ? ('<span class="obs-texto">' + val + '</span>') : '<span style="color:var(--text3);font-size:11px;">—</span>';
+    return '<td>' + display + '</td>';
+  }
+}
+
+function getObs(pedido) {
+  try { return localStorage.getItem('obs_' + pedido) || ''; } catch(e) { return ''; }
+}
+
+function saveObs(pedido, val) {
+  try { localStorage.setItem('obs_' + pedido, val); } catch(e) {}
 }
 
 function actualizarGauge(res) {
@@ -899,7 +600,6 @@ function filtrar() {
   var msg=document.getElementById('msg');
   var tabla=document.getElementById('tabla');
   var tbody=document.getElementById('tbody');
-  document.getElementById('th-orden').style.display = modoEdicion ? '' : 'none';
   if(!res.length){tabla.style.display='none';msg.style.display='block';msg.textContent='No se encontraron resultados.';return;}
   msg.style.display='none';
   tabla.style.display='table';
@@ -907,11 +607,10 @@ function filtrar() {
   tbody.innerHTML=res.map(function(r,i){
     var editBtn = modoEdicion ? '<td><button class="btn-edit-fila" onclick="event.stopPropagation();abrirModal('+i+')">✏️</button></td>' : '<td style="display:none;"></td>';
     return '<tr class="fila-clickable" onclick="abrirDetalle('+i+')">' +
-      ordenCell(r, i) +
       '<td><span class="pedido-num">'+(r.pedido||'—')+'</span></td>' +
       '<td><span class="tienda-tag">'+(r.tienda||'—')+'</span></td>' +
       '<td style="color:var(--text3);font-size:12px;">'+fmtFecha(r.fecha)+'</td>' +
-      etaCell(r) +
+      muniCell(r) +
       '<td style="color:var(--text2);">'+(r.hora||'—')+'</td>' +
       '<td><span class="badge '+badgeCls(r.estatus)+'">'+(r.estatus||'—')+'</span></td>' +
       '<td style="color:var(--text2);font-size:12px;">'+(r.subest||'—')+'</td>' +
@@ -926,17 +625,46 @@ function cargarDatos() {
   document.getElementById('msg').style.display='block';
   document.getElementById('tabla').style.display='none';
   document.getElementById('ultima-act').textContent='Actualizando...';
-  fetch(URL_API+'?t='+Date.now())
-    .then(function(r){ return r.json(); })
+
+  var controller = new AbortController();
+  var timeoutId = setTimeout(function(){ controller.abort(); }, 20000);
+
+  fetch(URL_API+'?t='+Date.now(), { signal: controller.signal })
+    .then(function(r){ clearTimeout(timeoutId); return r.json(); })
     .then(function(raw){
+      if (raw && raw.error) { throw new Error(raw.error); }
       datos=raw.filter(function(r){return r.pedido&&r.pedido.trim();}).map(function(r){r.tienda=tiendaDe(r.pedido);return r;});
       filtrar();
       document.getElementById('ultima-act').textContent='Actualizado '+new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
-      calcularETAsPendientes();
+      cargarETAs();
     })
-    .catch(function(){
-      document.getElementById('msg').textContent='⚠️ No se pudo conectar.';
+    .catch(function(e){
+      clearTimeout(timeoutId);
+      var msg = (e.name === 'AbortError') ? '⏱️ Tiempo de espera agotado. Intenta de nuevo.' : '⚠️ No se pudo conectar.';
+      document.getElementById('msg').textContent = msg;
       document.getElementById('ultima-act').textContent='Error';
+    });
+}
+
+// Carga los tiempos estimados por separado — si falla, simplemente no se muestran (no rompe nada)
+function cargarETAs() {
+  window._etaCargando = true;
+  var controller = new AbortController();
+  var timeoutId = setTimeout(function(){ controller.abort(); }, 60000);
+
+  fetch(URL_SCRIPT + '?accion=eta', { signal: controller.signal })
+    .then(function(r){ clearTimeout(timeoutId); return r.json(); })
+    .then(function(res){
+      window._etaCargando = false;
+      if (res && !res.error) {
+        etas = res;
+        filtrar();
+      }
+    })
+    .catch(function(e){
+      clearTimeout(timeoutId);
+      window._etaCargando = false;
+      // Fallo silencioso: se sigue mostrando el municipio sin ETA
     });
 }
 
@@ -972,7 +700,6 @@ function toggleEdicion() {
     document.getElementById('btn-edicion').classList.remove('activo');
     document.getElementById('btn-edicion').textContent = '✏️ Editar';
     document.getElementById('col-editar').style.display = 'none';
-    document.getElementById('btn-salida-ruta').style.display = 'none';
     filtrar();
   }
 }
@@ -985,7 +712,6 @@ function verificarPass() {
     document.getElementById('btn-edicion').classList.add('activo');
     document.getElementById('btn-edicion').textContent = '🔒 Salir de edición';
     document.getElementById('col-editar').style.display = '';
-    document.getElementById('btn-salida-ruta').style.display = 'inline-flex';
     filtrar();
   } else {
     document.getElementById('pass-error').style.display = 'block';
@@ -1028,32 +754,39 @@ function guardarCambios() {
     '&estatus=' + encodeURIComponent(estatus) +
     '&subest=' + encodeURIComponent(subest);
 
-  fetch(url)
-    .then(function(r){ return r.json(); })
+  var controller = new AbortController();
+  var timeoutId = setTimeout(function(){ controller.abort(); }, 20000);
+
+  fetch(url, { signal: controller.signal })
+    .then(function(r){ clearTimeout(timeoutId); return r.json(); })
     .then(function(res){
       if (res.ok) {
         var idx = datos.findIndex(function(d){ return d.fila === filaActual.fila; });
         if (idx >= 0) { datos[idx].hora=hora; datos[idx].estatus=estatus; datos[idx].subest=subest; }
-        if (filaActual.unidad) delete etaCache[filaActual.unidad];
-        console.log('[ETA] Guardado OK, llamando calcularETAsPendientes con unidad=', filaActual.unidad);
         cerrarModal();
         filtrar();
-        calcularETAsPendientes(filaActual.unidad);
+        cargarETAs(); // el cambio de estatus puede afectar el encadenado de ETAs
       } else {
-        alert('Error al guardar: ' + (res.msg||''));
+        alert('Error al guardar: ' + (res.msg||'Error desconocido'));
       }
     })
-    .catch(function(){ alert('Error de conexión al guardar.'); })
+    .catch(function(e){
+      clearTimeout(timeoutId);
+      if (e.name === 'AbortError') {
+        alert('⏱️ Se agotó el tiempo de espera. Revisa tu conexión e intenta de nuevo.');
+      } else {
+        alert('Error de conexión al guardar.');
+      }
+    })
     .finally(function(){
       btn.textContent = 'Guardar';
       btn.classList.remove('guardando');
     });
 }
 
+// Cerrar modales al tocar fuera
 document.getElementById('modal-overlay').addEventListener('click', function(e){ if(e.target===this) cerrarModal(); });
 document.getElementById('modal-detalle-overlay').addEventListener('click', function(e){ if(e.target===this) cerrarDetalle(); });
-document.getElementById('modal-salida-overlay').addEventListener('click', function(e){ if(e.target===this) cerrarModalSalida(); });
-document.getElementById('modal-pass-overlay').addEventListener('click', function(e){ if(e.target===this) cerrarModalPass(); });
 </script>
 </body>
 </html>
