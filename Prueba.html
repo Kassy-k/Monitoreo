@@ -563,9 +563,12 @@ function guardarGeocodeCache() {
 
 function sleep(ms) { return new Promise(function(res){ setTimeout(res, ms); }); }
 
+// LocationIQ: geocodificador gratis (5,000 peticiones/día), más confiable que Nominatim desde navegador.
+var LOCATIONIQ_KEY = 'pk.27b0551aef23d99e61003362cabe5c65';
+
 function geocodificarUrl(direccion) {
-  var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(direccion);
-  return fetch(url, { headers: { 'Accept-Language': 'es' } })
+  var url = 'https://us1.locationiq.com/v1/search?key=' + LOCATIONIQ_KEY + '&format=json&limit=1&q=' + encodeURIComponent(direccion);
+  return fetch(url)
     .then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.json(); })
     .then(function(arr){
       if (arr && arr[0]) return { lat: parseFloat(arr[0].lat), lon: parseFloat(arr[0].lon) };
@@ -578,14 +581,14 @@ async function geocodificarRow(r) {
   var full = direccionTexto(r);
   if (geocodeCache[full]) return geocodeCache[full]; // ya en caché, instantáneo
 
-  await sleep(1100); // respeta el límite de 1 request/seg de Nominatim (solo aplica si NO está en caché)
+  await sleep(550); // LocationIQ permite 2 peticiones/segundo en el plan gratis
   var coords = await geocodificarUrl(full);
   if (!coords) {
     // Fallback nivel 2: solo colonia + municipio (más confiable)
     var simple = direccionSimple(r);
     if (simple && geocodeCache[simple]) { coords = geocodeCache[simple]; }
     else if (simple) {
-      await sleep(1100);
+      await sleep(550);
       coords = await geocodificarUrl(simple);
       if (coords) { geocodeCache[simple] = coords; guardarGeocodeCache(); }
     }
@@ -595,7 +598,7 @@ async function geocodificarRow(r) {
     var muni = direccionMunicipio(r);
     if (muni && geocodeCache[muni]) { coords = geocodeCache[muni]; }
     else if (muni) {
-      await sleep(1100);
+      await sleep(550);
       coords = await geocodificarUrl(muni);
       if (coords) { geocodeCache[muni] = coords; guardarGeocodeCache(); }
     }
