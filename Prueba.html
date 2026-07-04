@@ -944,11 +944,25 @@ function cargarDatos() {
       filtrar();
       document.getElementById('ultima-act').textContent='Actualizado '+new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
       calcularETAsPendientes();
+      mostrarDebugSiAplica();
     })
     .catch(function(){
       document.getElementById('msg').textContent='⚠️ No se pudo conectar.';
       document.getElementById('ultima-act').textContent='Error';
     });
+}
+
+// Modo de depuración: agrega ?debug=NUMERODEPEDIDO a la URL para ver sus datos crudos en una ventana emergente
+function mostrarDebugSiAplica() {
+  var params = new URLSearchParams(window.location.search);
+  var pedidoDebug = params.get('debug');
+  if (!pedidoDebug) return;
+  var fila = datos.find(function(r){ return r.pedido && r.pedido.toUpperCase() === pedidoDebug.toUpperCase(); });
+  if (!fila) {
+    alert('No se encontró el pedido "' + pedidoDebug + '" en los datos cargados.');
+    return;
+  }
+  alert('DATOS DE ' + pedidoDebug + ':\n\n' + JSON.stringify(fila, null, 2));
 }
 
 function toggleTema(){
