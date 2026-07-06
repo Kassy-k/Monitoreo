@@ -946,6 +946,7 @@ function cargarDatos() {
       document.getElementById('ultima-act').textContent='Actualizado '+new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
       calcularETAsPendientes();
       mostrarDebugSiAplica();
+      mostrarDebugGeoSiAplica();
     })
     .catch(function(){
       document.getElementById('msg').textContent='⚠️ No se pudo conectar.';
@@ -964,6 +965,29 @@ function mostrarDebugSiAplica() {
     return;
   }
   alert('DATOS DE ' + pedidoDebug + ':\n\n' + JSON.stringify(fila, null, 2));
+}
+
+// Modo de depuración: agrega ?debuggeo=NUMERODEPEDIDO para probar la geocodificación EXACTAMENTE
+// como la hace la página (fetch desde JS), no pegando la URL manualmente — así se detectan
+// bloqueos de CORS/red que no se ven al probar la URL a mano en el navegador.
+async function mostrarDebugGeoSiAplica() {
+  var params = new URLSearchParams(window.location.search);
+  var pedidoDebug = params.get('debuggeo');
+  if (!pedidoDebug) return;
+  var fila = datos.find(function(r){ return r.pedido && r.pedido.toUpperCase() === pedidoDebug.toUpperCase(); });
+  if (!fila) {
+    alert('No se encontró el pedido "' + pedidoDebug + '".');
+    return;
+  }
+  var full = direccionTexto(fila);
+  var url = 'https://us1.locationiq.com/v1/search?key=' + LOCATIONIQ_KEY + '&format=json&limit=1&q=' + encodeURIComponent(full);
+  try {
+    var resp = await fetch(url);
+    var texto = await resp.text();
+    alert('PRUEBA REAL (igual que la hace la página)\n\nDirección probada:\n' + full + '\n\nCódigo HTTP: ' + resp.status + '\n\nRespuesta:\n' + texto.substring(0, 800));
+  } catch (err) {
+    alert('ERROR al llamar a LocationIQ (probablemente bloqueo de red/CORS):\n\n' + err.toString() + '\n\nDirección probada:\n' + full);
+  }
 }
 
 function toggleTema(){
