@@ -213,7 +213,7 @@
   <button class="btn" onclick="limpiarFecha()">Ver todo</button>
   <div class="spacer"></div>
   <button class="btn" onclick="cargarDatos()">↻ Actualizar</button>
-  <button class="btn" onclick="calcularETAsPendientes()">🔄 Reintentar estimados</button>
+  <button class="btn" onclick="calcularETAsPendientes(true)">🔄 Reintentar estimados</button>
 </div>
 
 <div class="stats">
@@ -373,8 +373,6 @@ var URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbxDnGjaeeRhdLcaYtYynVZ
 var PASS = 'KasselMonitoreo';
 var modoEdicion = false;
 var datos = [];
-var etaCache = {}; // unidad -> {pedido: 'HH:MM AM/PM'}
-var etaCalculando = {}; // unidad -> bool
 
 var TIENDAS = {
   'DECOSFE':'SANTA FE','DECOINT':'INTERLOMAS','DECOZAR':'ZARAGOZA',
@@ -525,10 +523,9 @@ function guardarSalida() {
   fetch(url).then(function(r){return r.json();}).then(function(res){
     if (res.ok) {
       datos.forEach(function(d){ if(d.unidad===unidad) d.horaSalida = hora; });
-      delete etaCache[unidad];
       cerrarModalSalida();
       filtrar();
-      calcularETAsPendientes();
+      calcularETAsPendientes(true); // forzar, para ver el resultado al instante
     } else {
       alert('Error al guardar salida.');
     }
@@ -536,93 +533,10 @@ function guardarSalida() {
   .finally(function(){ btn.textContent='Confirmar'; btn.classList.remove('guardando'); });
 }
 
-// ============ CÁLCULO DE ETAs CON OSRM ============
-function direccionTexto(r) {
-  var partes = [r.calle, r.colonia, r.cp, r.municipioDir, 'México'].filter(function(x){return x && x.trim();});
-  return partes.join(', ');
-}
-
-function direccionSimple(r) {
-  var partes = [r.colonia, r.municipioDir, 'México'].filter(function(x){return x && x.trim();});
-  return partes.join(', ');
-}
-
-function direccionMunicipio(r) {
-  var partes = [r.municipioDir, 'México'].filter(function(x){return x && x.trim();});
-  return partes.join(', ');
-}
-
-var geocodeCache = {};
-try {
-  var stored = localStorage.getItem('geocodeCache');
-  if (stored) geocodeCache = JSON.parse(stored);
-} catch(e) { geocodeCache = {}; }
-
-function guardarGeocodeCache() {
-  try { localStorage.setItem('geocodeCache', JSON.stringify(geocodeCache)); } catch(e) {}
-}
-
-function sleep(ms) { return new Promise(function(res){ setTimeout(res, ms); }); }
-
-// LocationIQ: geocodificador gratis (5,000 peticiones/día), más confiable que Nominatim desde navegador.
-var LOCATIONIQ_KEY = 'pk.27b0551aef23d99e61003362cabe5c65';
-
-function geocodificarUrl(direccion) {
-  var url = 'https://us1.locationiq.com/v1/search?key=' + LOCATIONIQ_KEY + '&format=json&limit=1&q=' + encodeURIComponent(direccion);
-  return fetch(url)
-    .then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.json(); })
-    .then(function(arr){
-      if (arr && arr[0]) return { lat: parseFloat(arr[0].lat), lon: parseFloat(arr[0].lon) };
-      return null;
-    })
-    .catch(function(){ return null; });
-}
-
-async function geocodificarRow(r) {
-  var full = direccionTexto(r);
-  if (geocodeCache[full]) return geocodeCache[full]; // ya en caché, instantáneo
-
-  await sleep(550); // LocationIQ permite 2 peticiones/segundo en el plan gratis
-  var coords = await geocodificarUrl(full);
-  if (!coords) {
-    // Fallback nivel 2: solo colonia + municipio (más confiable)
-    var simple = direccionSimple(r);
-    if (simple && geocodeCache[simple]) { coords = geocodeCache[simple]; }
-    else if (simple) {
-      await sleep(550);
-      coords = await geocodificarUrl(simple);
-      if (coords) { geocodeCache[simple] = coords; guardarGeocodeCache(); }
-    }
-  }
-  if (!coords) {
-    // Fallback nivel 3: solo el municipio (garantiza un punto aproximado en el mapa)
-    var muni = direccionMunicipio(r);
-    if (muni && geocodeCache[muni]) { coords = geocodeCache[muni]; }
-    else if (muni) {
-      await sleep(550);
-      coords = await geocodificarUrl(muni);
-      if (coords) { geocodeCache[muni] = coords; guardarGeocodeCache(); }
-    }
-  }
-  if (coords && full) {
-    geocodeCache[full] = coords;
-    guardarGeocodeCache();
-  }
-  return coords;
-}
-
-function tiempoViajeOSRM(origen, destino) {
-  var url = 'https://router.project-osrm.org/route/v1/driving/' + origen.lon + ',' + origen.lat + ';' + destino.lon + ',' + destino.lat + '?overview=false';
-  return fetch(url)
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      if (data && data.routes && data.routes[0]) {
-        return data.routes[0].duration; // segundos
-      }
-      return null;
-    })
-    .catch(function(){ return null; });
-}
+// ============ CÁLCULO DE ETAs — AHORA DESDE EL SERVIDOR (Apps Script + LocationIQ) ============
+// Ya no se geocodifica desde cada navegador (evita choques de límite cuando varios abren el dashboard).
+var etaPorPedido = {}; // { pedido: {desde, hasta} }
+var etaCargando = false;
 
 function parseHoraAMin(hora) {
   if (!hora) return null;
@@ -647,115 +561,33 @@ function minAHora(min) {
   return hh12 + ':' + String(mm).padStart(2,'0') + ' ' + ampm;
 }
 
-var ALMACEN_DIR = 'Av. 1 de Mayo 86, Centro Industrial Tlalnepantla, 54030 Tlalnepantla de Baz, México';
-var almacenCoords = null;
+function calcularETAsPendientes(forzar) {
+  etaCargando = true;
+  var url = URL_SCRIPT + '?accion=eta' + (forzar ? '&force=1' : '');
+  var controller = new AbortController();
+  var timeoutId = setTimeout(function(){ controller.abort(); }, 60000);
 
-async function calcularETAsPendientes(unidadForzada) {
-  if (!almacenCoords) {
-    if (geocodeCache[ALMACEN_DIR]) {
-      almacenCoords = geocodeCache[ALMACEN_DIR];
-    } else {
-      almacenCoords = await geocodificarUrl(ALMACEN_DIR);
-      if (almacenCoords) { geocodeCache[ALMACEN_DIR] = almacenCoords; guardarGeocodeCache(); }
-    }
-  }
-
-  var fechaActiva = document.getElementById('filtro-fecha').value || hoy();
-
-  var porUnidad = {};
-  datos.forEach(function(r){
-    if (!r.unidad || !r.horaSalida) return;
-    if (normFecha(r.fecha) !== fechaActiva) return; // solo pedidos del día activo
-    if (!porUnidad[r.unidad]) porUnidad[r.unidad] = [];
-    porUnidad[r.unidad].push(r);
-  });
-
-  for (var unidad in porUnidad) {
-    var esForzado = (unidadForzada && unidad === unidadForzada);
-    if (etaCalculando[unidad] && !esForzado) { continue; }
-    etaCalculando[unidad] = true;
-
-    var pedidosUnidad = porUnidad[unidad].filter(function(r){ return r.orden && !isNaN(parseInt(r.orden)); });
-    pedidosUnidad.sort(function(a,b){ return parseInt(a.orden) - parseInt(b.orden); });
-
-    if (!pedidosUnidad.length) { etaCalculando[unidad]=false; continue; }
-
-    // Reiniciar cache de esta unidad en cada recálculo (evita arrastrar horas viejas)
-    etaCache[unidad] = {};
-
-    // Encontrar el siguiente pedido sin estatus (el primero pendiente en orden)
-    var siguienteIdx = -1;
-    for (var i=0;i<pedidosUnidad.length;i++) {
-      var e = (pedidosUnidad[i].estatus||'').trim();
-      if (!e || e === '—') { siguienteIdx = i; break; }
-    }
-    if (siguienteIdx === -1) { etaCalculando[unidad]=false; continue; }
-
-    var horaSalidaMin = parseHoraAMin(pedidosUnidad[0].horaSalida);
-    if (horaSalidaMin === null) { etaCalculando[unidad]=false; continue; }
-
-    // Hora base: la hora REAL del último pedido entregado (si existe y es posterior a la salida),
-    // o la hora de salida del almacén si todavía no se ha entregado ninguno.
-    var horaBaseMin = null;
-    var origenCoords = null;
-
-    if (siguienteIdx > 0 && pedidosUnidad[siguienteIdx-1].hora) {
-      var anterior = pedidosUnidad[siguienteIdx - 1];
-      var horaAnteriorMin = parseHoraAMin(anterior.hora);
-      // Solo confiar en esta hora si es posterior (o igual) a la hora de salida del día
-      if (horaAnteriorMin !== null && horaAnteriorMin >= horaSalidaMin) {
-        horaBaseMin = horaAnteriorMin;
-        origenCoords = await geocodificarRow(anterior);
-      }
-    }
-    if (horaBaseMin === null) {
-      horaBaseMin = horaSalidaMin;
-      origenCoords = almacenCoords;
-    }
-    if (horaBaseMin === null) { etaCalculando[unidad]=false; continue; }
-
-    try {
-      var acumMinBase = 0; // sin margen (optimista)
-      var BUFFER_MINUTOS = 180; // ventana fija de +3 horas sobre el estimado optimista
-      var MIN_POR_PARADA = 15;
-      var huboSaltoSinUbicar = false; // se activa si alguna parada anterior en la cadena no se pudo geocodificar
-
-      for (var j = siguienteIdx; j < pedidosUnidad.length; j++) {
-        var destCoords = await geocodificarRow(pedidosUnidad[j]);
-        if (!origenCoords || !destCoords) {
-          etaCache[unidad][pedidosUnidad[j].pedido] = null;
-          origenCoords = destCoords || origenCoords;
-          huboSaltoSinUbicar = true; // esta parada se salta, así que la cadena queda incompleta desde aquí
-          continue;
-        }
-        var segs = await tiempoViajeOSRM(origenCoords, destCoords);
-        if (segs === null) {
-          etaCache[unidad][pedidosUnidad[j].pedido] = null;
-        } else {
-          var viajeMin = segs/60;
-          acumMinBase += viajeMin + MIN_POR_PARADA;
-
-          var etaMinOptimista = horaBaseMin + acumMinBase;
-          var etaMinConMargen = etaMinOptimista + BUFFER_MINUTOS;
-
-          // Sanity check: si el estimado pasa de 14h desde la base, algo salió mal
-          if (etaMinConMargen - horaBaseMin > 14*60) {
-            etaCache[unidad][pedidosUnidad[j].pedido] = null;
-          } else {
-            etaCache[unidad][pedidosUnidad[j].pedido] = {
-              desde: minAHora(etaMinOptimista),
-              hasta: minAHora(etaMinConMargen),
-              aproximado: huboSaltoSinUbicar // true si alguna parada previa se saltó por no encontrarse
-            };
+  fetch(url, { signal: controller.signal })
+    .then(function(r){ clearTimeout(timeoutId); return r.json(); })
+    .then(function(res){
+      etaCargando = false;
+      if (res && !res.error) {
+        etaPorPedido = {};
+        Object.keys(res).forEach(function(k){
+          if (k.indexOf('_') === 0) return; // saltar _stats, _geocodesUsadosTotal (info de diagnóstico)
+          var min = parseHoraAMin(res[k]);
+          if (min !== null) {
+            etaPorPedido[k] = { desde: minAHora(min), hasta: minAHora(min + 180) }; // +3 horas fijas
           }
-        }
-        origenCoords = destCoords;
+        });
       }
-    } catch(e) {}
-
-    etaCalculando[unidad] = false;
-    filtrar();
-  }
+      filtrar();
+    })
+    .catch(function(){
+      clearTimeout(timeoutId);
+      etaCargando = false;
+      // Fallo silencioso: se sigue mostrando "Sin iniciar" o "Calculando..." según el caso
+    });
 }
 
 function etaCell(r) {
@@ -771,16 +603,14 @@ function etaCell(r) {
     return '<td><span class="eta-badge eta-pendiente">Sin iniciar</span></td>';
   }
 
-  var cache = etaCache[r.unidad];
-  if (cache && cache[r.pedido]) {
-    var eta = cache[r.pedido];
-    var texto = eta.desde === eta.hasta ? eta.desde : (eta.desde + ' - ' + eta.hasta);
-    var advertencia = eta.aproximado ? ' ⚠️' : '';
-    return '<td><span class="eta-badge eta-calculado" title="' + (eta.aproximado ? 'Aproximado: una parada anterior en la ruta no se pudo ubicar, así que este cálculo se saltó ese tramo' : '') + '">🕐 ' + texto + advertencia + '</span></td>';
-  } else if (cache && cache[r.pedido] === null) {
-    return '<td><span class="eta-badge eta-pendiente">N/D</span></td>';
+  var eta = etaPorPedido[r.pedido];
+  if (eta) {
+    return '<td><span class="eta-badge eta-calculado">🕐 ' + eta.desde + ' - ' + eta.hasta + '</span></td>';
   }
-  return '<td><span class="eta-badge eta-siguiente">Calculando...</span></td>';
+  if (etaCargando) {
+    return '<td><span class="eta-badge eta-siguiente">Calculando...</span></td>';
+  }
+  return '<td><span class="eta-badge eta-pendiente">N/D</span></td>';
 }
 
 function abrirDetalle(i) {
@@ -815,10 +645,9 @@ function abrirDetalle(i) {
 
   // ETA
   var etaRow = document.getElementById('det-eta-row');
-  var cache = etaCache[r.unidad];
-  if (cache && cache[r.pedido]) {
-    var etaObj = cache[r.pedido];
-    document.getElementById('det-eta').textContent = etaObj.desde === etaObj.hasta ? etaObj.desde : (etaObj.desde + ' - ' + etaObj.hasta + ' aprox');
+  var etaObj = etaPorPedido[r.pedido];
+  if (etaObj) {
+    document.getElementById('det-eta').textContent = etaObj.desde + ' - ' + etaObj.hasta + ' aprox';
     etaRow.style.display = 'flex';
   } else {
     etaRow.style.display = 'none';
@@ -946,7 +775,6 @@ function cargarDatos() {
       document.getElementById('ultima-act').textContent='Actualizado '+new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
       calcularETAsPendientes();
       mostrarDebugSiAplica();
-      mostrarDebugGeoSiAplica();
     })
     .catch(function(){
       document.getElementById('msg').textContent='⚠️ No se pudo conectar.';
@@ -964,30 +792,8 @@ function mostrarDebugSiAplica() {
     alert('No se encontró el pedido "' + pedidoDebug + '" en los datos cargados.');
     return;
   }
-  alert('DATOS DE ' + pedidoDebug + ':\n\n' + JSON.stringify(fila, null, 2));
-}
-
-// Modo de depuración: agrega ?debuggeo=NUMERODEPEDIDO para probar la geocodificación EXACTAMENTE
-// como la hace la página (fetch desde JS), no pegando la URL manualmente — así se detectan
-// bloqueos de CORS/red que no se ven al probar la URL a mano en el navegador.
-async function mostrarDebugGeoSiAplica() {
-  var params = new URLSearchParams(window.location.search);
-  var pedidoDebug = params.get('debuggeo');
-  if (!pedidoDebug) return;
-  var fila = datos.find(function(r){ return r.pedido && r.pedido.toUpperCase() === pedidoDebug.toUpperCase(); });
-  if (!fila) {
-    alert('No se encontró el pedido "' + pedidoDebug + '".');
-    return;
-  }
-  var full = direccionTexto(fila);
-  var url = 'https://us1.locationiq.com/v1/search?key=' + LOCATIONIQ_KEY + '&format=json&limit=1&q=' + encodeURIComponent(full);
-  try {
-    var resp = await fetch(url);
-    var texto = await resp.text();
-    alert('PRUEBA REAL (igual que la hace la página)\n\nDirección probada:\n' + full + '\n\nCódigo HTTP: ' + resp.status + '\n\nRespuesta:\n' + texto.substring(0, 800));
-  } catch (err) {
-    alert('ERROR al llamar a LocationIQ (probablemente bloqueo de red/CORS):\n\n' + err.toString() + '\n\nDirección probada:\n' + full);
-  }
+  var eta = etaPorPedido[pedidoDebug.toUpperCase()] || etaPorPedido[pedidoDebug];
+  alert('DATOS DE ' + pedidoDebug + ':\n\n' + JSON.stringify(fila, null, 2) + '\n\nETA calculado:\n' + JSON.stringify(eta, null, 2));
 }
 
 function toggleTema(){
@@ -1084,10 +890,9 @@ function guardarCambios() {
       if (res.ok) {
         var idx = datos.findIndex(function(d){ return d.fila === filaActual.fila; });
         if (idx >= 0) { datos[idx].hora=hora; datos[idx].estatus=estatus; datos[idx].subest=subest; }
-        if (filaActual.unidad) delete etaCache[filaActual.unidad];
         cerrarModal();
         filtrar();
-        calcularETAsPendientes(filaActual.unidad);
+        calcularETAsPendientes(true); // forzar, el cambio de estatus afecta la cadena de ETAs
       } else {
         alert('Error al guardar: ' + (res.msg||''));
       }
