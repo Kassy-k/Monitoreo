@@ -563,13 +563,29 @@ function minAHora(min) {
 
 function calcularETAsPendientes(forzar) {
   etaCargando = true;
+  var params = new URLSearchParams(window.location.search);
+  var debugEta = params.get('debugeta') === '1';
   var url = URL_SCRIPT + '?accion=eta' + (forzar ? '&force=1' : '');
   var controller = new AbortController();
   var timeoutId = setTimeout(function(){ controller.abort(); }, 60000);
 
   fetch(url, { signal: controller.signal })
-    .then(function(r){ clearTimeout(timeoutId); return r.json(); })
-    .then(function(res){
+    .then(function(r){
+      clearTimeout(timeoutId);
+      if (debugEta) alert('Código HTTP de la respuesta: ' + r.status);
+      return r.text();
+    })
+    .then(function(texto){
+      if (debugEta) alert('RESPUESTA CRUDA DEL SERVIDOR (primeros 1000 caracteres):\n\n' + texto.substring(0, 1000));
+      var res;
+      try {
+        res = JSON.parse(texto);
+      } catch (e) {
+        if (debugEta) alert('No se pudo interpretar como JSON:\n\n' + e.toString());
+        etaCargando = false;
+        filtrar();
+        return;
+      }
       etaCargando = false;
       if (res && !res.error) {
         etaPorPedido = {};
@@ -580,13 +596,16 @@ function calcularETAsPendientes(forzar) {
             etaPorPedido[k] = { desde: minAHora(min), hasta: minAHora(min + 180) }; // +3 horas fijas
           }
         });
+      } else if (res && res.error && debugEta) {
+        alert('El servidor devolvió un error:\n\n' + res.error);
       }
       filtrar();
     })
-    .catch(function(){
+    .catch(function(err){
       clearTimeout(timeoutId);
       etaCargando = false;
-      // Fallo silencioso: se sigue mostrando "Sin iniciar" o "Calculando..." según el caso
+      if (debugEta) alert('ERROR al conectar con el servidor:\n\n' + err.toString());
+      filtrar();
     });
 }
 
