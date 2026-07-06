@@ -567,7 +567,7 @@ function calcularETAsPendientes(forzar) {
   var debugEta = params.get('debugeta') === '1';
   var url = URL_SCRIPT + '?accion=eta' + (forzar ? '&force=1' : '');
   var controller = new AbortController();
-  var timeoutId = setTimeout(function(){ controller.abort(); }, 60000);
+  var timeoutId = setTimeout(function(){ controller.abort(); }, 90000);
 
   fetch(url, { signal: controller.signal })
     .then(function(r){
