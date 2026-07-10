@@ -554,6 +554,8 @@ function parseHoraAMin(hora) {
   if (!m) return null;
   var hh = parseInt(m[1]), mm = parseInt(m[2]);
   if (isNaN(hh) || isNaN(mm) || mm > 59) return null;
+  // Horas 1-11 sin am/pm son ambiguas — no se adivina, se trata como inválida.
+  if (!m[3] && hh >= 1 && hh <= 11) return null;
   if (m[3] === 'pm' && hh < 12) hh += 12;
   if (m[3] === 'am' && hh === 12) hh = 0;
   if (hh > 23) return null;
