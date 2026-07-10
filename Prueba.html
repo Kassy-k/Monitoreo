@@ -123,6 +123,8 @@
   [data-theme="dark"] .eta-siguiente{background:#412402;color:#fac775;}
   .eta-calculado{background:#e1f5ee;color:#085041;}
   [data-theme="dark"] .eta-calculado{background:#04342c;color:#9fe1cb;}
+  .eta-error{background:#fcebeb;color:#791f1f;cursor:help;}
+  [data-theme="dark"] .eta-error{background:#501313;color:#f7c1c1;}
 
   .gauge-mini{position:relative;display:flex;align-items:center;justify-content:center;width:100px;height:54px;}
   .gauge-mini-svg{width:100px;height:54px;}
@@ -245,7 +247,7 @@
     <h3>Editar pedido</h3>
     <span class="pedido-tag" id="modal-pedido"></span>
     <label>Hora reportada</label>
-    <input type="text" id="modal-hora" placeholder="ej. 14:35">
+    <input type="time" id="modal-hora">
     <label>Estatus</label>
     <select id="modal-estatus">
       <option value="Exitoso">Exitoso</option>
@@ -271,7 +273,7 @@
     <label>Unidad</label>
     <select id="salida-unidad"></select>
     <label>Hora de salida</label>
-    <input type="text" id="salida-hora" placeholder="ej. 09:15">
+    <input type="time" id="salida-hora">
     <div class="modal-btns">
       <button class="btn-cancelar" onclick="cerrarModalSalida()">Cancelar</button>
       <button class="btn-guardar" id="btn-guardar-salida" onclick="guardarSalida()">Confirmar</button>
@@ -337,6 +339,10 @@
     <div class="detalle-row" id="det-eta-row">
       <span class="dr-label">Hora estimada</span>
       <span class="dr-val" id="det-eta">—</span>
+    </div>
+    <div class="detalle-row" id="det-error-row" style="display:none;">
+      <span class="dr-label">Motivo sin estimado</span>
+      <span class="dr-val" id="det-error" style="color:#a32d2d;">—</span>
     </div>
 
     <div id="det-tel-row" style="display:none;margin-top:0.75rem;">
@@ -501,7 +507,8 @@ function abrirModalSalida() {
   var sel = document.getElementById('salida-unidad');
   var unidades = unidadesDisponibles();
   sel.innerHTML = unidades.map(function(u){return '<option value="'+u+'">'+u.toUpperCase()+'</option>';}).join('');
-  document.getElementById('salida-hora').value = new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false});
+  var d = new Date();
+  document.getElementById('salida-hora').value = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
   document.getElementById('modal-salida-overlay').classList.add('visible');
 }
 
@@ -536,6 +543,7 @@ function guardarSalida() {
 // ============ CÁLCULO DE ETAs — AHORA DESDE EL SERVIDOR (Apps Script + LocationIQ) ============
 // Ya no se geocodifica desde cada navegador (evita choques de límite cuando varios abren el dashboard).
 var etaPorPedido = {}; // { pedido: {desde, hasta} }
+var erroresPorPedido = {}; // { pedido: "motivo por el que no se pudo calcular" }
 var etaCargando = false;
 
 function parseHoraAMin(hora) {
@@ -560,6 +568,14 @@ function minAHora(min) {
   var hh12 = hh%12; if(hh12===0) hh12=12;
   return hh12 + ':' + String(mm).padStart(2,'0') + ' ' + ampm;
 }
+
+var MOTIVOS_LEGIBLES = {
+  'sin_hora_salida': 'La unidad aún no registra salida a ruta',
+  'sin_calle': 'El pedido no tiene dirección capturada',
+  'geocode_fallido': 'No se pudo ubicar la dirección en el mapa',
+  'geocode_sospechoso': 'La dirección encontrada no cuadra con la zona esperada (revisar colonia/municipio)',
+  'ruta_fallida': 'No se pudo calcular la ruta hacia esa dirección'
+};
 
 function calcularETAsPendientes(forzar) {
   etaCargando = true;
@@ -589,8 +605,9 @@ function calcularETAsPendientes(forzar) {
       etaCargando = false;
       if (res && !res.error) {
         etaPorPedido = {};
+        erroresPorPedido = res._errores || {};
         Object.keys(res).forEach(function(k){
-          if (k.indexOf('_') === 0) return; // saltar _stats, _geocodesUsadosTotal (info de diagnóstico)
+          if (k.indexOf('_') === 0) return; // saltar _stats, _errores, etc. (info de diagnóstico)
           var min = parseHoraAMin(res[k]);
           if (min !== null) {
             etaPorPedido[k] = { desde: minAHora(min), hasta: minAHora(min + 180) }; // +3 horas fijas
@@ -629,6 +646,11 @@ function etaCell(r) {
   if (etaCargando) {
     return '<td><span class="eta-badge eta-siguiente">Calculando...</span></td>';
   }
+  var motivo = erroresPorPedido[r.pedido];
+  if (motivo) {
+    var legible = MOTIVOS_LEGIBLES[motivo] || motivo;
+    return '<td><span class="eta-badge eta-error" title="' + legible.replace(/"/g,'&quot;') + '">⚠️ N/D</span></td>';
+  }
   return '<td><span class="eta-badge eta-pendiente">N/D</span></td>';
 }
 
@@ -664,12 +686,21 @@ function abrirDetalle(i) {
 
   // ETA
   var etaRow = document.getElementById('det-eta-row');
+  var errorRow = document.getElementById('det-error-row');
   var etaObj = etaPorPedido[r.pedido];
   if (etaObj) {
     document.getElementById('det-eta').textContent = etaObj.desde + ' - ' + etaObj.hasta + ' aprox';
     etaRow.style.display = 'flex';
+    errorRow.style.display = 'none';
   } else {
     etaRow.style.display = 'none';
+    var motivo = erroresPorPedido[r.pedido];
+    if (motivo && (!r.estatus || !r.estatus.trim())) {
+      document.getElementById('det-error').textContent = MOTIVOS_LEGIBLES[motivo] || motivo;
+      errorRow.style.display = 'flex';
+    } else {
+      errorRow.style.display = 'none';
+    }
   }
 
   var unidad = (r.unidad || '').trim();
@@ -812,7 +843,8 @@ function mostrarDebugSiAplica() {
     return;
   }
   var eta = etaPorPedido[pedidoDebug.toUpperCase()] || etaPorPedido[pedidoDebug];
-  alert('DATOS DE ' + pedidoDebug + ':\n\n' + JSON.stringify(fila, null, 2) + '\n\nETA calculado:\n' + JSON.stringify(eta, null, 2));
+  var err = erroresPorPedido[pedidoDebug.toUpperCase()] || erroresPorPedido[pedidoDebug];
+  alert('DATOS DE ' + pedidoDebug + ':\n\n' + JSON.stringify(fila, null, 2) + '\n\nETA calculado:\n' + JSON.stringify(eta, null, 2) + '\n\nMotivo si falló:\n' + (err || 'ninguno'));
 }
 
 function toggleTema(){
@@ -878,7 +910,13 @@ function abrirModal(i) {
   if (!r) return;
   filaActual = r;
   document.getElementById('modal-pedido').textContent = r.pedido;
-  document.getElementById('modal-hora').value = r.hora || '';
+  var minExistente = parseHoraAMin(r.hora || '');
+  if (minExistente !== null) {
+    var hh = Math.floor(minExistente/60), mm = minExistente%60;
+    document.getElementById('modal-hora').value = String(hh).padStart(2,'0') + ':' + String(mm).padStart(2,'0');
+  } else {
+    document.getElementById('modal-hora').value = '';
+  }
   document.getElementById('modal-estatus').value = r.estatus || 'Exitoso';
   document.getElementById('modal-subest').value = r.subest || '';
   document.getElementById('modal-overlay').classList.add('visible');
