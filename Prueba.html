@@ -400,7 +400,15 @@ function tiendaDe(pedido) {
   if (p.indexOf('CF-') === 0) p = p.slice(3);
   if (p.indexOf('PR-') === 0) p = p.slice(3);
   var keys = Object.keys(TIENDAS).sort(function(a,b){return b.length-a.length;});
-  for (var i=0;i<keys.length;i++) { if (p.indexOf(keys[i])===0) return TIENDAS[keys[i]]; }
+  for (var i=0;i<keys.length;i++) {
+    var k = keys[i];
+    if (p.indexOf(k)===0) {
+      var resto = p.slice(k.length);
+      // El prefijo solo cuenta si justo después viene un dígito (folio) o no sigue nada.
+      // Evita que "ETIQUETAS" (empieza con "ET") se confunda con la tienda "ET"=Metepec.
+      if (resto === '' || /^[0-9]/.test(resto)) return TIENDAS[k];
+    }
+  }
   return 'OTRA';
 }
 
