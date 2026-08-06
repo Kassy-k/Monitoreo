@@ -294,7 +294,7 @@
 
     <div class="detalle-unidad-card" id="det-unidad-card">
       <div id="det-tipo-badge"></div>
-      <div class="unidad-info-grid">
+      <div class="unidad-info-grid" id="det-unidad-grid">
         <div class="unidad-info-item">
           <div class="ui-label">Unidad</div>
           <div class="ui-val mono" id="det-unidad">—</div>
@@ -308,6 +308,7 @@
           <div class="ui-val" id="det-operador">—</div>
         </div>
       </div>
+      <div class="sin-unidad" id="det-sin-unidad" style="display:none;">Sin información de unidad</div>
     </div>
 
     <div class="detalle-divider"></div>
@@ -722,10 +723,13 @@ function abrirDetalle(i) {
     document.getElementById('det-unidad').textContent = unidad ? unidad.toUpperCase() : '—';
     document.getElementById('det-placas').textContent = placas || '—';
     document.getElementById('det-operador').textContent = operador || '—';
-    document.getElementById('det-unidad-card').style.display = '';
+    document.getElementById('det-tipo-badge').style.display = '';
+    document.getElementById('det-unidad-grid').style.display = '';
+    document.getElementById('det-sin-unidad').style.display = 'none';
   } else {
-    document.getElementById('det-unidad-card').innerHTML = '<div class="sin-unidad">Sin información de unidad</div>';
-    document.getElementById('det-unidad-card').style.display = '';
+    document.getElementById('det-tipo-badge').style.display = 'none';
+    document.getElementById('det-unidad-grid').style.display = 'none';
+    document.getElementById('det-sin-unidad').style.display = '';
   }
 
   var esStudio = (r.tienda === 'STUDIO');
