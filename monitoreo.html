@@ -620,7 +620,7 @@ function calcularETAsPendientes(forzar) {
           if (k.indexOf('_') === 0) return; // saltar _stats, _errores, etc. (info de diagnóstico)
           var min = parseHoraAMin(res[k]);
           if (min !== null) {
-            etaPorPedido[k] = { desde: minAHora(min), hasta: minAHora(min + 180) }; // +3 horas fijas
+            etaPorPedido[k] = { desde: minAHora(min), hasta: minAHora(min + 120) }; // +2 horas fijas
           }
         });
       } else if (res && res.error && debugEta) {
