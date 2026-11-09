@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+<!-- v22-inmediata-obs-2026-10-30 -->
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -43,6 +44,8 @@
   .stat .val{font-size:22px;font-weight:500;line-height:1;margin-bottom:4px;}
   .stat .lbl{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.04em;}
   .s-total .val{color:var(--text);}
+  .s-inm .val{color:#d85a30;}
+  [data-theme="dark"] .s-inm .val{color:#f0997b;}
   .s-ok .val{color:#0f6e56;} .s-rej .val{color:#993c1d;} .s-rep .val{color:#ba7517;} .s-no .val{color:#a32d2d;} .s-par .val{color:#3b6d11;}
   [data-theme="dark"] .s-ok .val{color:#5dcaa5;} [data-theme="dark"] .s-rej .val{color:#f0997b;} [data-theme="dark"] .s-rep .val{color:#ef9f27;} [data-theme="dark"] .s-no .val{color:#f09595;} [data-theme="dark"] .s-par .val{color:#97c459;}
   .tabla-wrap{padding:0 1.5rem 2rem;overflow-x:auto;}
@@ -56,6 +59,9 @@
   .pedido-num{font-weight:500;font-size:13px;font-family:'SF Mono','Fira Code',monospace;letter-spacing:0.02em;}
   .badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap;}
   .b-ok{background:#e1f5ee;color:#085041;} .b-rej{background:#faece7;color:#712b13;} .b-rep{background:#faeeda;color:#633806;} .b-par{background:#eaf3de;color:#27500a;} .b-no{background:#fcebeb;color:#791f1f;} .b-def{background:var(--surface2);color:var(--text2);}
+  .b-inm{background:#ffe3d6;color:#9a2f0a;font-weight:700;box-shadow:0 0 0 1px #d85a30 inset;}
+  [data-theme="dark"] .b-inm{background:#5a1f0c;color:#ffc9b3;box-shadow:0 0 0 1px #f0997b inset;}
+  tr.fila-inmediata .pedido-num::before{content:'⚡ ';}
   [data-theme="dark"] .b-ok{background:#04342c;color:#9fe1cb;} [data-theme="dark"] .b-rej{background:#4a1b0c;color:#f5c4b3;} [data-theme="dark"] .b-rep{background:#412402;color:#fac775;} [data-theme="dark"] .b-par{background:#173404;color:#c0dd97;} [data-theme="dark"] .b-no{background:#501313;color:#f7c1c1;}
   .tienda-tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:5px;font-size:11px;font-weight:500;background:var(--surface2);color:var(--text2);border:0.5px solid var(--border);white-space:nowrap;}
   #msg{text-align:center;padding:3rem 1.5rem;color:var(--text3);font-size:14px;}
@@ -112,7 +118,7 @@
   .obs-input{width:100%;min-width:160px;height:28px;border:0.5px solid var(--border);border-radius:6px;padding:0 8px;font-size:12px;background:var(--surface2);color:var(--text);outline:none;transition:border-color 0.15s;}
   .obs-input:focus{border-color:var(--accent);}
   .obs-input::placeholder{color:var(--text3);}
-  .obs-texto{font-size:12px;color:var(--text2);}
+  .obs-texto{font-size:12px;color:var(--text2);overflow-wrap:anywhere;}
 
   .orden-input{width:50px;height:28px;border:0.5px solid var(--border);border-radius:6px;padding:0 6px;font-size:12px;background:var(--surface2);color:var(--text);outline:none;text-align:center;}
   .orden-input:focus{border-color:var(--accent);}
@@ -193,6 +199,7 @@
     <option value="PERINORTE">Perinorte</option>
     <option value="STUDIO">Studio</option>
     <option value="METEPEC">Metepec</option>
+    <option value="PACHUCA">Pachuca</option>
     <option value="VENDEDORES">Vendedores (EM/FOR/EQ/ECO)</option>
     <option value="SAL">SAL</option>
     <option value="EAL">EAL</option>
@@ -206,6 +213,7 @@
     <option value="reprogramado">Reprogramado</option>
     <option value="parcial">Parcial</option>
     <option value="no entregado">No entregado</option>
+    <option value="inmediata">Inmediata</option>
   </select>
   <div class="ctrl-group">
     <span class="ctrl-label">Fecha</span>
@@ -225,6 +233,7 @@
   <div class="stat s-rep"><div class="val" id="s-rep">—</div><div class="lbl">Reprogramado</div></div>
   <div class="stat s-no"><div class="val" id="s-no">—</div><div class="lbl">No entregado</div></div>
   <div class="stat s-par"><div class="val" id="s-par">—</div><div class="lbl">Parcial</div></div>
+  <div class="stat s-inm"><div class="val" id="s-inm">—</div><div class="lbl">Inmediata</div></div>
 </div>
 
 <!-- Modal contraseña -->
@@ -256,6 +265,7 @@
       <option value="Reprogramado">Reprogramado</option>
       <option value="Parcial">Parcial</option>
       <option value="No entregado">No entregado</option>
+      <option value="INMEDIATA">INMEDIATA</option>
     </select>
     <label>Sub estatus</label>
     <input type="text" id="modal-subest" placeholder="ej. Cliente ausente">
@@ -333,6 +343,10 @@
       <span class="dr-label">Sub estatus</span>
       <span class="dr-val" id="det-subest">—</span>
     </div>
+    <div class="detalle-row" id="det-obs-row" style="display:none;align-items:flex-start;gap:12px;">
+      <span class="dr-label">Observaciones</span>
+      <span class="dr-val" id="det-obs" style="max-width:65%;overflow-wrap:anywhere;"></span>
+    </div>
     <div class="detalle-row" id="det-orden-row">
       <span class="dr-label">Orden de ruta</span>
       <span class="dr-val" id="det-orden">—</span>
@@ -391,6 +405,7 @@ var TIENDAS = {
   'TOR':'TOREO','OTO':'TOREO','LVI':'LA VIGA','OLV':'LA VIGA',
   'KOU':'PERINORTE','KPE':'PERINORTE','STU':'STUDIO','CD':'STUDIO',
   'MET':'METEPEC','OME':'METEPEC','ET':'METEPEC',
+  'KPA':'PACHUCA','OPA':'PACHUCA',
   'EM':'VENDEDORES','FOR':'VENDEDORES','EQ':'VENDEDORES','ECO':'VENDEDORES',
   'SAL':'SAL','EAL':'EAL','QDR':'QDR'
 };
@@ -438,8 +453,17 @@ function hoy() {
 function ponerHoy() { document.getElementById('filtro-fecha').value=hoy(); filtrar(); }
 function limpiarFecha() { document.getElementById('filtro-fecha').value=''; filtrar(); }
 
+function esInmediata(e) { return (e||'').toLowerCase().indexOf('inmediata') >= 0; }
+
+// Un estatus "final" es cualquiera con texto, excepto INMEDIATA (sigue pendiente de entregar).
+function esEstatusFinal(e) {
+  var s = (e||'').trim();
+  return s !== '' && s !== '—' && !esInmediata(s);
+}
+
 function badgeCls(e) {
   var s=(e||'').toLowerCase();
+  if(s.indexOf('inmediata')>=0) return 'b-inm';
   if(s.indexOf('exitoso')>=0||s==='entregado') return 'b-ok';
   if(s.indexOf('rechazado')>=0) return 'b-rej';
   if(s.indexOf('reprogramado')>=0) return 'b-rep';
@@ -468,21 +492,57 @@ function tipoUnidad(u) {
   return { label: u.toUpperCase(), cls: 'tipo-otro', emoji: '🚗' };
 }
 
-function getObs(pedido) {
-  try { return localStorage.getItem('obs_' + pedido) || ''; } catch(e) { return ''; }
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Las observaciones viven en el Sheet: se lee cualquier campo del renglón que empiece con "obs"
+// (obs, observaciones, Observaciones...). localStorage queda solo como respaldo de este navegador.
+function obsServidor(r) {
+  if (!r) return '';
+  for (var k in r) {
+    if (/^obs/i.test(k) && r[k] != null && String(r[k]).trim() !== '') return String(r[k]).trim();
+  }
+  return '';
+}
+
+function getObs(r) {
+  var s = obsServidor(r);
+  if (s) return s;
+  try { return localStorage.getItem('obs_' + (r && r.pedido)) || ''; } catch(e) { return ''; }
 }
 
 function saveObs(pedido, val) {
   try { localStorage.setItem('obs_' + pedido, val); } catch(e) {}
 }
 
-function obsCell(pedido) {
-  var val = getObs(pedido);
+var avisoObsMostrado = false;
+function avisoObsLocal() {
+  if (avisoObsMostrado) return;
+  avisoObsMostrado = true;
+  alert('La observación quedó guardada solo en este navegador. Para que la vean todos hace falta agregar el guardado de observaciones (accion=obs) al Apps Script.');
+}
+
+function guardarObs(el) {
+  var pedido = el.dataset.pid;
+  var fila = parseInt(el.dataset.fila, 10);
+  var val = el.value.trim();
+  saveObs(pedido, val); // respaldo local
+  var idx = datos.findIndex(function(d){ return d.fila === fila; });
+  if (idx >= 0) datos[idx].obs = val;
+  var url = URL_SCRIPT + '?accion=obs&fila=' + fila + '&obs=' + encodeURIComponent(val);
+  fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(res){ if (!(res && res.ok)) avisoObsLocal(); })
+    .catch(function(){ avisoObsLocal(); });
+}
+
+function obsCell(r) {
+  var val = getObs(r);
   if (modoEdicion) {
-    var safe = val.replace(/"/g, '&quot;');
-    return '<td onclick="event.stopPropagation()"><input class="obs-input" type="text" placeholder="Agregar observación..." value="' + safe + '" onchange="saveObs(this.dataset.pid, this.value)" data-pid="' + pedido + '" maxlength="120"></td>';
+    return '<td onclick="event.stopPropagation()"><input class="obs-input" type="text" placeholder="Agregar observación..." value="' + escHtml(val) + '" onchange="guardarObs(this)" data-pid="' + escHtml(r.pedido) + '" data-fila="' + escHtml(r.fila) + '" maxlength="250"></td>';
   } else {
-    var display = val ? ('<span class="obs-texto">' + val + '</span>') : '<span style="color:var(--text3);font-size:11px;">—</span>';
+    var display = val ? ('<span class="obs-texto">' + escHtml(val) + '</span>') : '<span style="color:var(--text3);font-size:11px;">—</span>';
     return '<td>' + display + '</td>';
   }
 }
@@ -587,6 +647,16 @@ var MOTIVOS_LEGIBLES = {
   'ruta_fallida': 'No se pudo calcular la ruta hacia esa dirección'
 };
 
+// Salvaguarda: si el servidor manda la hora SIN AM/PM (ej. "02:50") y quedaría ANTES de la salida a ruta
+// de la unidad, es imposible (nadie llega antes de salir), así que se interpreta como PM.
+function corregirAmPm(raw, pedido, min) {
+  if (min === null || /am|pm/i.test(raw)) return min;
+  var fila = datos.find(function(d){ return d.pedido === pedido; });
+  var salMin = fila ? parseHoraAMin(fila.horaSalida) : null;
+  if (salMin !== null && min < salMin && min < 720 && min + 720 >= salMin) return min + 720;
+  return min;
+}
+
 function calcularETAsPendientes(forzar) {
   etaCargando = true;
   var params = new URLSearchParams(window.location.search);
@@ -618,7 +688,8 @@ function calcularETAsPendientes(forzar) {
         erroresPorPedido = res._errores || {};
         Object.keys(res).forEach(function(k){
           if (k.indexOf('_') === 0) return; // saltar _stats, _errores, etc. (info de diagnóstico)
-          var min = parseHoraAMin(res[k]);
+          var rawEta = String(res[k]);
+          var min = corregirAmPm(rawEta, k, parseHoraAMin(rawEta));
           if (min !== null) {
             etaPorPedido[k] = { desde: minAHora(min), hasta: minAHora(min + 120) }; // +2 horas fijas
           }
@@ -640,7 +711,7 @@ function etaCell(r) {
   if (!r.unidad) return '<td><span class="eta-badge eta-pendiente">—</span></td>';
 
   var estatus = (r.estatus||'').trim();
-  if (estatus && estatus !== '—') {
+  if (esEstatusFinal(estatus)) {
     var esOk = estatus.toLowerCase().indexOf('exitoso')>=0 || estatus.toLowerCase()==='entregado';
     return '<td><span style="color:var(--text3);font-size:13px;">' + (esOk ? '✓' : '—') + '</span></td>';
   }
@@ -683,6 +754,16 @@ function abrirDetalle(i) {
     subRow.style.display = 'flex';
   } else {
     subRow.style.display = 'none';
+  }
+
+  // Observaciones
+  var obsRow = document.getElementById('det-obs-row');
+  var obsVal = getObs(r);
+  if (obsVal) {
+    document.getElementById('det-obs').textContent = obsVal;
+    obsRow.style.display = 'flex';
+  } else {
+    obsRow.style.display = 'none';
   }
 
   // Orden de ruta: solo modo edición
@@ -760,10 +841,7 @@ function cerrarDetalle() {
 
 function actualizarGauge(res) {
   var total = res.length;
-  var finalizados = res.filter(function(r){
-    var e = (r.estatus||'').trim();
-    return e !== '' && e !== '—';
-  }).length;
+  var finalizados = res.filter(function(r){ return esEstatusFinal(r.estatus); }).length;
   var pct = total > 0 ? Math.round((finalizados / total) * 100) : 0;
 
   var arcLen = 150.8;
@@ -782,7 +860,7 @@ function filtrar() {
   var est=document.getElementById('filtro-estatus').value.toLowerCase();
   var fecha=document.getElementById('filtro-fecha').value;
   var res=datos.filter(function(r){
-    var mt=!q||[r.pedido,r.muni,r.subest].some(function(v){return (v||'').toLowerCase().indexOf(q)>=0;});
+    var mt=!q||[r.pedido,r.muni,r.subest,getObs(r)].some(function(v){return (v||'').toLowerCase().indexOf(q)>=0;});
     var mti=!tienda||r.tienda===tienda;
     var me=!est||(r.estatus||'').toLowerCase().indexOf(est)>=0;
     var mf=!fecha||normFecha(r.fecha)===fecha;
@@ -793,12 +871,14 @@ function filtrar() {
   var rep=res.filter(function(r){return (r.estatus||'').toLowerCase().indexOf('reprogramado')>=0;}).length;
   var par=res.filter(function(r){return (r.estatus||'').toLowerCase().indexOf('parcial')>=0;}).length;
   var no=res.filter(function(r){return (r.estatus||'').toLowerCase().indexOf('no entregado')>=0;}).length;
+  var inm=res.filter(function(r){return esInmediata(r.estatus);}).length;
   document.getElementById('s-total').textContent=res.length;
   document.getElementById('s-ok').textContent=ok;
   document.getElementById('s-rej').textContent=rej;
   document.getElementById('s-rep').textContent=rep;
   document.getElementById('s-par').textContent=par;
   document.getElementById('s-no').textContent=no;
+  document.getElementById('s-inm').textContent=inm;
   actualizarGauge(res);
   var msg=document.getElementById('msg');
   var tabla=document.getElementById('tabla');
@@ -810,7 +890,7 @@ function filtrar() {
   window._resActual = res;
   tbody.innerHTML=res.map(function(r,i){
     var editBtn = modoEdicion ? '<td><button class="btn-edit-fila" onclick="event.stopPropagation();abrirModal('+i+')">✏️</button></td>' : '<td style="display:none;"></td>';
-    return '<tr class="fila-clickable" onclick="abrirDetalle('+i+')">' +
+    return '<tr class="fila-clickable' + (esInmediata(r.estatus) ? ' fila-inmediata' : '') + '" onclick="abrirDetalle('+i+')">' +
       ordenCell(r, i) +
       '<td><span class="pedido-num">'+(r.pedido||'—')+'</span></td>' +
       '<td><span class="tienda-tag">'+(r.tienda||'—')+'</span></td>' +
@@ -819,7 +899,7 @@ function filtrar() {
       '<td style="color:var(--text2);">'+(r.hora||'—')+'</td>' +
       '<td><span class="badge '+badgeCls(r.estatus)+'">'+(r.estatus||'—')+'</span></td>' +
       '<td style="color:var(--text2);font-size:12px;">'+(r.subest||'—')+'</td>' +
-      obsCell(r.pedido) +
+      obsCell(r) +
       editBtn +
       '</tr>';
   }).join('');
@@ -930,7 +1010,11 @@ function abrirModal(i) {
   } else {
     document.getElementById('modal-hora').value = '';
   }
-  document.getElementById('modal-estatus').value = r.estatus || 'Exitoso';
+  var selEst = document.getElementById('modal-estatus');
+  var estActual = (r.estatus || '').trim().toLowerCase();
+  var estMatch = '';
+  Array.prototype.forEach.call(selEst.options, function(o){ if (o.value.toLowerCase() === estActual) estMatch = o.value; });
+  selEst.value = estMatch || 'Exitoso';
   document.getElementById('modal-subest').value = r.subest || '';
   document.getElementById('modal-overlay').classList.add('visible');
 }
